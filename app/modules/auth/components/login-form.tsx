@@ -1,4 +1,4 @@
-import { cn } from "~/lib/utils";
+import { cn, formatError, getFieldError } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -15,25 +15,74 @@ import {
   FieldError,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { Form, useActionData, useNavigation } from "react-router";
+import { Form, useNavigation } from "react-router";
+import type { ValidationError, ValidationErrorDetails } from "~/types";
+import {
+  useEffect,
+  useState,
+  type FocusEvent,
+  type SyntheticEvent,
+} from "react";
+import { SigninSchema } from "../schemas";
+import { useClient } from "~/hooks/client";
+
+type SigninValidationError = ValidationError<keyof SigninSchema>;
+
+interface LoginFormProps extends React.ComponentProps<"div"> {
+  initialFormErrors?: ValidationErrorDetails[];
+  initialFieldError?: SigninValidationError;
+}
 
 export function LoginForm({
   className,
+  initialFormErrors,
+  initialFieldError,
   ...props
-}: React.ComponentProps<"div">) {
-  const actionData = useActionData() as {
-    error?: string;
-    fieldErrors?: {
-      email?: string[];
-      password?: string[];
-    };
-  } | undefined;
+}: LoginFormProps) {
+  const [formErrors, setFormErrors] = useState<ValidationErrorDetails[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<SigninValidationError>({});
 
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const emailErrors = actionData?.fieldErrors?.email?.map((message) => ({ message }));
-  const passwordErrors = actionData?.fieldErrors?.password?.map((message) => ({ message }));
+  const { isMounted } = useClient();
+
+  useEffect(() => {
+    if (initialFormErrors) {
+      setFormErrors(initialFormErrors);
+    }
+    if (initialFieldError) {
+      setFieldErrors(initialFieldError);
+    }
+  }, [initialFormErrors, initialFieldError]);
+
+  const validateField = async (key: keyof SigninSchema, value: string) => {
+    const result = await SigninSchema.shape[key].safeParseAsync(value);
+    if (result.success) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[key];
+        return newErrors;
+      });
+    } else {
+      const errors = formatError<keyof SigninSchema>(result.error, key);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [key]: errors[key],
+      }));
+    }
+  };
+
+  const handleFieldBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "email" || name === "password") {
+      validateField(name, value);
+    }
+  };
+
+  const handleFormSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
+    console.log("masuk");
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -45,17 +94,18 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form method="post" className="flex flex-col gap-4">
-            {actionData?.error && (
-              <div
-                role="alert"
-                className="p-3 text-sm rounded bg-destructive/15 text-destructive font-medium border border-destructive/20"
-              >
-                {actionData.error}
-              </div>
-            )}
+          <Form
+            method="post"
+            className="flex flex-col gap-4"
+            noValidate={isMounted}
+            onSubmit={handleFormSubmit}
+          >
             <FieldGroup>
-              <Field data-invalid={emailErrors && emailErrors.length > 0 ? "true" : undefined}>
+              <Field
+                data-invalid={
+                  !!(formErrors.length || fieldErrors.email?.length)
+                }
+              >
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
@@ -64,10 +114,21 @@ export function LoginForm({
                   placeholder="email@example.com"
                   required
                   disabled={isSubmitting}
+                  aria-invalid={
+                    !!(formErrors.length || fieldErrors.email?.length)
+                  }
+                  onBlur={handleFieldBlur}
                 />
-                <FieldError errors={emailErrors} />
+                <FieldError
+                  errors={getFieldError<keyof SigninSchema>(
+                    "email",
+                    fieldErrors,
+                  )}
+                />
               </Field>
-              <Field data-invalid={passwordErrors && passwordErrors.length > 0 ? "true" : undefined}>
+              <Field
+                data-invalid={formErrors.length || fieldErrors.password?.length}
+              >
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <a
@@ -83,19 +144,19 @@ export function LoginForm({
                   type="password"
                   required
                   disabled={isSubmitting}
+                  onBlur={handleFieldBlur}
                 />
-                <FieldError errors={passwordErrors} />
+                <FieldError
+                  errors={getFieldError<keyof SigninSchema>(
+                    "password",
+                    fieldErrors,
+                  )}
+                />
               </Field>
               <Field>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
-                <Button variant="outline" type="button" disabled={isSubmitting}>
-                  Login with Google
-                </Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
-                </FieldDescription>
               </Field>
             </FieldGroup>
           </Form>
