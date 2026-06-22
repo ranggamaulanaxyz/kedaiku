@@ -5,40 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "chrome",
+            "name": "Debug Server (React Router)",
+            "type": "node-terminal",
             "request": "launch",
-            "name": "Debug Client (Chrome)",
-            "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}",
-            "sourceMapPathOverrides": {
-                "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
-                "webpack:///./*": "${workspaceFolder}/*",
-                "webpack:///*": "*",
-                "webpack:///src/*": "${workspaceFolder}/*",
-                "index.js": "${workspaceFolder}/index.js"
-            }
+            "command": "npm run dev -- --host",
+            "cwd": "${workspaceFolder}"
         },
         {
-            "type": "node",
+            "name": "Debug Client (Chrome)",
+            "type": "chrome",
             "request": "launch",
-            "name": "Debug Server (npm run dev)",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run",
-                "dev"
-            ],
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "console": "integratedTerminal",
-            "port": 9229
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}"
         }
     ],
     "compounds": [
         {
-            "name": "Debug Full Stack",
+            "name": "Debug Full-Stack (Client & Server)",
             "configurations": [
-                "Debug Server (npm run dev)",
+                "Debug Server (React Router)",
                 "Debug Client (Chrome)"
             ]
         }

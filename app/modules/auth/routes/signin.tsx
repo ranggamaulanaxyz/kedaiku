@@ -3,8 +3,31 @@ import { LoginForm } from "../components/login-form";
 import { AuthService } from "../service";
 import type { Route } from "./+types/signin";
 import { SigninSchema } from "../schemas";
-import { supabaseHeadersContext } from "~/modules/supabase/context";
+import {
+  supabaseClientContext,
+  supabaseHeadersContext,
+} from "~/modules/supabase/context";
 import z from "zod";
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const supabase = context.get(supabaseClientContext);
+  const headers = context.get(supabaseHeadersContext);
+
+  if (!supabase) {
+    throw new Error("Supabase client not initialized in context");
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    supabase.from('partners').
+    return redirect(`/#${user.user_metadata.name}`, { headers });
+  }
+
+  return data({}, { headers });
+}
 
 export async function action({ request, context }: Route.ActionArgs) {
   const auth = new AuthService(context);
