@@ -1,5 +1,5 @@
 import type { RouterContextProvider } from "react-router";
-import { createClient } from "~/lib/supabase.server";
+import { createClient } from "./lib/supabase.server";
 import { supabaseClientContext, supabaseHeadersContext } from "./context";
 
 export async function supabaseMiddleware({

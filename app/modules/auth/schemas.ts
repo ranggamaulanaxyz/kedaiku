@@ -6,3 +6,11 @@ export const SigninSchema = z.object({
 });
 
 export type SigninSchema = z.infer<typeof SigninSchema>;
+
+export const ResetPasswordRequestSchema = z.object({
+  email: z.email(),
+});
+
+export type ResetPasswordRequestSchema = z.infer<
+  typeof ResetPasswordRequestSchema
+>;

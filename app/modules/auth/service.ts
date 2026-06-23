@@ -31,11 +31,17 @@ export class AuthService {
     };
   }
 
-  async getUser(
-    context: Readonly<RouterContextProvider>,
-  ): Promise<User | null> {
-    const supabase = context.get(supabaseClientContext);
-    const { data } = await supabase.auth.getUser();
+  async signout() {
+    await this.supabase.auth.signOut();
+  }
+
+  async authenticated(): Promise<boolean> {
+    const user = await this.getUser();
+    return !!user;
+  }
+
+  async getUser(): Promise<User | null> {
+    const { data } = await this.supabase.auth.getUser();
     if (data.user) {
       return data.user;
     }
@@ -43,17 +49,14 @@ export class AuthService {
     return null;
   }
 
-  async getPartner(
-    context: Readonly<RouterContextProvider>,
-  ): Promise<Partner | null> {
-    const user = await this.getUser(context);
+  async getPartner(): Promise<Partner | null> {
+    const user = await this.getUser();
 
     if (!user) {
       return null;
     }
 
-    const supabase = context.get(supabaseClientContext);
-    const { data: partner, error } = await supabase
+    const { data: partner, error } = await this.supabase
       .from("partners")
       .select("id, name")
       .eq("id", user.id)
