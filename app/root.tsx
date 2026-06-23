@@ -13,6 +13,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { supabaseMiddleware } from "./modules/supabase/middleware";
 import { authMiddleware } from "./modules/auth/middleware";
+import { Toaster } from "./components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -63,9 +64,9 @@ function ProgressBar() {
   if (!active) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-1 w-full bg-transparent">
+    <div className="fixed top-0 right-0 left-0 z-50 h-1 w-full bg-transparent">
       <div
-        className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-primary transition-all duration-300 ease-out shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+        className="to-primary h-full bg-gradient-to-r from-blue-500 via-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] transition-all duration-300 ease-out"
         style={{
           width: `${progress}%`,
         }}
@@ -86,6 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ProgressBar />
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -114,11 +116,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <main className="container mx-auto p-4 pt-16">
       <h1>{message}</h1>
       <p>{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full overflow-x-auto p-4">
           <code>{stack}</code>
         </pre>
       )}

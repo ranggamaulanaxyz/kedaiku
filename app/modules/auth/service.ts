@@ -1,7 +1,7 @@
 import { redirect, type RouterContextProvider } from "react-router";
 import { supabaseClientContext } from "../supabase/context";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { ResetPasswordRequestSchema, SigninSchema } from "./schemas";
+import type { ResetPasswordRequestSchema, ResetPasswordSchema, SigninSchema } from "./schemas";
 import type { Partner, Token } from "./types";
 import type { AppError } from "~/types";
 
@@ -71,13 +71,55 @@ export class AuthService {
 
   async resetPasswordRequest(
     data: ResetPasswordRequestSchema,
-  ): Promise<boolean> {
+  ): Promise<{isSent: boolean, error: AppError | null}> {
     const { error } = await this.supabase.auth.resetPasswordForEmail(
       data.email,
       {
         redirectTo: `${import.meta.env.VITE_APP_URL}/password/reset`,
       },
     );
-    return !!error;
+    if (error) {
+      return {isSent: false, error:{
+      fieldErrors: {
+        email: [{message: error?.message}]
+      }
+    }};
+    }
+    return {isSent: true, error: null}
+  }
+
+  async resetPassword(
+    data: ResetPasswordSchema,
+    code?: string,
+  ): Promise<{ isUpdated: boolean; error: AppError | null }> {
+    if (code) {
+      const { error: exchangeError } =
+        await this.supabase.auth.exchangeCodeForSession(code);
+      if (exchangeError) {
+        return {
+          isUpdated: false,
+          error: {
+            fieldErrors: {
+              password: [{ message: exchangeError?.message }],
+            },
+          },
+        };
+      }
+    }
+
+    const { error } = await this.supabase.auth.updateUser({
+      password: data.password,
+    });
+    if (error) {
+      return {
+        isUpdated: false,
+        error: {
+          fieldErrors: {
+            password: [{ message: error?.message }],
+          },
+        },
+      };
+    }
+    return { isUpdated: true, error: null };
   }
 }

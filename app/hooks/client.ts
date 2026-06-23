@@ -1,13 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 
 export function useClient() {
-  const isMountedRef = useRef(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
+    setIsMounted(true);
   }, []);
 
-  return { isMounted: isMountedRef.current };
+  return { isMounted };
 }

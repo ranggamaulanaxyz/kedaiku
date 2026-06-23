@@ -1,7 +1,12 @@
+import MainWrapper from "../components/main-wrapper";
+import ResetPasswordForm from "../components/reset-password-form";
 import ResetPasswordRequestForm from "../components/reset-password-request-form";
+import ResetPasswordRequestSent from "../components/reset-password-request-sent";
 import { authServiceContext } from "../context";
 import { requireGuestMiddleware } from "../middleware";
 import type { Route } from "./+types/reset-password";
+import { data, redirect } from "react-router";
+import { supabaseHeadersContext } from "~/modules/supabase/context";
 
 export const middleware: Route.MiddlewareFunction[] = [requireGuestMiddleware];
 
@@ -12,12 +17,34 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const email = formData.get("email") as string;
-
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
   const auth = context.get(authServiceContext);
-  const isSent = await auth.resetPasswordRequest({ email });
-  return { isSent };
+  const headers = context.get(supabaseHeadersContext);
+
+  const formData = await request.formData();
+
+  if (code) {
+    const password = formData.get("password") as string;
+    const password_confirmation = formData.get(
+      "password_confirmation",
+    ) as string;
+    const { isUpdated, error } = await auth.resetPassword(
+      {
+        password,
+        password_confirmation,
+      },
+      code,
+    );
+    if (isUpdated) {
+      return data({ isUpdated: false, error }, { headers });
+    }
+    return data({ isUpdated: true }, { headers });
+  }
+
+  const email = formData.get("email") as string;
+  const { isSent, error } = await auth.resetPasswordRequest({ email });
+  return data({ isSent, error: error }, { headers });
 }
 
 export default function ResetPasswordRoute({
@@ -25,19 +52,35 @@ export default function ResetPasswordRoute({
   actionData,
 }: Route.ComponentProps) {
   const { isResetPage } = loaderData;
+
+  const isUpdated =
+    actionData && "isUpdated" in actionData ? actionData.isUpdated : false;
+  const isSent =
+    actionData && "isSent" in actionData ? actionData.isSent : false;
+  const error = actionData && "error" in actionData ? actionData.error : null;
+
   if (isResetPage) {
-    return <></>;
+    return (
+      <MainWrapper>
+        <ResetPasswordForm
+          isUpdated={isUpdated}
+          initialFieldErrors={error?.fieldErrors}
+        />
+      </MainWrapper>
+    );
   }
 
-  if (actionData?.isSent) {
-    return <></>;
+  if (isSent) {
+    return (
+      <MainWrapper>
+        <ResetPasswordRequestSent />
+      </MainWrapper>
+    );
   }
 
   return (
-    <main className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <ResetPasswordRequestForm initialFieldErrors={{}} />
-      </div>
-    </main>
+    <MainWrapper>
+      <ResetPasswordRequestForm initialFieldErrors={error?.fieldErrors} />
+    </MainWrapper>
   );
 }

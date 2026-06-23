@@ -17,6 +17,15 @@
             "request": "launch",
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Attach to Cloudflare Worker",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "websocketAddress": "ws://localhost:9229/my-react-router-app",
+            "resolveSourceMapLocations": null,
+            "sourceMaps": true
         }
     ],
     "compounds": [
