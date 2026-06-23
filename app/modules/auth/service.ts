@@ -1,7 +1,7 @@
-import type { RouterContextProvider } from "react-router";
+import { redirect, type RouterContextProvider } from "react-router";
 import { supabaseClientContext } from "../supabase/context";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { SigninSchema } from "./schemas";
+import type { ResetPasswordRequestSchema, SigninSchema } from "./schemas";
 import type { Partner, Token } from "./types";
 import type { AppError } from "~/types";
 
@@ -67,5 +67,17 @@ export class AuthService {
     }
 
     return null;
+  }
+
+  async resetPasswordRequest(
+    data: ResetPasswordRequestSchema,
+  ): Promise<boolean> {
+    const { error } = await this.supabase.auth.resetPasswordForEmail(
+      data.email,
+      {
+        redirectTo: `${import.meta.env.VITE_APP_URL}/password/reset`,
+      },
+    );
+    return !!error;
   }
 }

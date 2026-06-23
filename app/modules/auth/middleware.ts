@@ -1,9 +1,5 @@
 import { redirect, type RouterContextProvider } from "react-router";
-import {
-  supabaseClientContext,
-  supabaseHeadersContext,
-} from "~/modules/supabase/context";
-import { authServiceContext, userContext } from "./context";
+import { authServiceContext } from "./context";
 import { AuthService } from "./service";
 
 export async function authMiddleware({
@@ -15,4 +11,31 @@ export async function authMiddleware({
   const authService = new AuthService(context);
 
   context.set(authServiceContext, authService);
+}
+
+export async function requireAuthMiddleware({
+  context,
+}: {
+  request: Request;
+  context: Readonly<RouterContextProvider>;
+}) {
+  const authService = context.get(authServiceContext);
+  const isAuthenticated = await authService.authenticated();
+
+  if (!isAuthenticated) {
+    throw redirect("/signin");
+  }
+}
+
+export async function requireGuestMiddleware({
+  context,
+}: {
+  context: Readonly<RouterContextProvider>;
+}) {
+  const authService = context.get(authServiceContext);
+  const isAuthenticated = await authService.authenticated();
+
+  if (isAuthenticated) {
+    throw redirect("/app");
+  }
 }

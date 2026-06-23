@@ -12,6 +12,7 @@ import type { ValidationError } from "~/types";
 import type { ResetPasswordRequestSchema } from "../schemas";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
+import { useClient } from "~/hooks/client";
 
 type ResetPasswordRequestError = ValidationError<
   keyof ResetPasswordRequestSchema
@@ -24,6 +25,7 @@ interface ResetPasswordRequestFormProps {
 export default function ResetPasswordRequestForm({
   initialFieldErrors,
 }: ResetPasswordRequestFormProps) {
+  const { isMounted } = useClient();
   const [fieldErrors, setFieldErrors] =
     useState<ResetPasswordRequestError>(initialFieldErrors);
 
@@ -44,7 +46,7 @@ export default function ResetPasswordRequestForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form>
+          <Form method="post" noValidate={isMounted}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
