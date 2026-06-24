@@ -23,7 +23,7 @@ export async function requireAuthMiddleware({
   const isAuthenticated = await authService.authenticated();
 
   if (!isAuthenticated) {
-    throw redirect("/signin");
+    throw redirect("/");
   }
 }
 
@@ -36,6 +36,6 @@ export async function requireGuestMiddleware({
   const isAuthenticated = await authService.authenticated();
 
   if (isAuthenticated) {
-    throw redirect("/app");
+    throw redirect("/app/dashboard");
   }
 }

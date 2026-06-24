@@ -4,16 +4,10 @@ import type { Route } from "./+types/signin";
 import { SigninSchema } from "../schemas";
 import { supabaseHeadersContext } from "~/modules/supabase/context";
 import z from "zod";
-import { AuthService } from "../service";
 import { authServiceContext } from "../context";
+import { requireGuestMiddleware } from "../middleware";
 
-export async function loader({ context }: Route.LoaderArgs) {
-  const auth = context.get(authServiceContext);
-  const authenticated = await auth.authenticated();
-  if (authenticated) {
-    return redirect("/app");
-  }
-}
+export const middleware: Route.MiddlewareFunction[] = [requireGuestMiddleware];
 
 export async function action({ request, context }: Route.ActionArgs) {
   const auth = context.get(authServiceContext);
