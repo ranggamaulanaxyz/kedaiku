@@ -14,8 +14,9 @@ import {
   LayoutDashboard,
   BadgeDollarSign,
   Package,
+  Contact,
 } from "lucide-react";
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useLocation, useNavigation } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   Collapsible,
@@ -82,10 +83,19 @@ const data: MenuItem[] = [
       { type: "menu", name: "Stock", to: "/app/stock" },
     ],
   },
+  {
+    type: "menu",
+    name: "Contacts",
+    icon: Contact,
+    to: "/app/partners",
+  },
 ];
 
 function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
   const Icon = item.icon;
+  const location = useLocation();
+  const navigation = useNavigation();
+
   return (
     <Collapsible asChild className="group/collapsible">
       <SidebarMenuItem>
@@ -98,15 +108,23 @@ function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {item.children?.map((child) => (
-              <SidebarMenuSubItem key={child.name}>
-                <SidebarMenuSubButton asChild>
-                  <NavLink to={child.to}>
-                    <span>{child.name}</span>
-                  </NavLink>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
+            {item.children?.map((child) => {
+              const isActive = child.to
+                ? location.pathname === child.to ||
+                  (navigation.location &&
+                    navigation.location.pathname === child.to)
+                : false;
+
+              return (
+                <SidebarMenuSubItem key={child.name}>
+                  <SidebarMenuSubButton asChild isActive={isActive}>
+                    <NavLink to={child.to}>
+                      <span>{child.name}</span>
+                    </NavLink>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>
@@ -116,9 +134,16 @@ function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
 
 function LayoutSidebarMenuItem({ item }: { item: MenuItem }) {
   const Icon = item.icon;
+  const location = useLocation();
+  const navigation = useNavigation();
+  const isActive = item.to
+    ? location.pathname === item.to ||
+      (navigation.location && navigation.location.pathname === item.to)
+    : false;
+
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton tooltip={item.name} asChild>
+      <SidebarMenuButton tooltip={item.name} asChild isActive={isActive}>
         <NavLink to={item.to || "#"}>
           {Icon && <Icon className="size-4" />}
           <span>{item.name}</span>

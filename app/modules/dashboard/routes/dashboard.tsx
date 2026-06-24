@@ -4,6 +4,10 @@ import SectionCards from "./components/section-cards";
 
 export const middleware: Route.MiddlewareFunction[] = [requireAuthMiddleware];
 
+export const handle = {
+  breadcrumb: "Dashboard",
+};
+
 export default function DashboardRoute() {
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
