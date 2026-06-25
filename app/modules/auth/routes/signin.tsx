@@ -3,11 +3,23 @@ import { LoginForm } from "../components/login-form";
 import type { Route } from "./+types/signin";
 import { SigninSchema } from "../schemas";
 import { supabaseHeadersContext } from "~/modules/supabase/context";
-import z from "zod";
 import { authServiceContext } from "../context";
-import { requireGuestMiddleware } from "../middleware";
+import { authMiddleware } from "../middleware";
+import { formatError } from "~/lib/utils";
+import type { AppError } from "~/types";
 
-export const middleware: Route.MiddlewareFunction[] = [requireGuestMiddleware];
+export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const headers = context.get(supabaseHeadersContext);
+  const auth = context.get(authServiceContext);
+  const authenticated = await auth.authenticated();
+  if (authenticated) {
+    return redirect("/app/dashboard", { headers });
+  }
+
+  return data({}, { headers });
+}
 
 export async function action({ request, context }: Route.ActionArgs) {
   const auth = context.get(authServiceContext);
@@ -19,27 +31,23 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const result = SigninSchema.safeParse({ email, password });
   if (!result.success) {
-    const validationErrors = z.flattenError(result.error);
+    const fieldErrors = formatError<keyof SigninSchema>(result.error);
     return data(
       {
         error: {
           message: "Invalid username and password",
-          formErrors: validationErrors.formErrors,
-          fieldErrors: validationErrors.fieldErrors,
-        },
+          fieldErrors,
+        } as AppError,
       },
       { status: 400, headers },
     );
   }
 
-  const { token, error } = await auth.signin(result.data);
+  const { error } = await auth.signin(result.data);
   if (error) {
     return data(
       {
-        error: {
-          message: error.message,
-          formErrors: error.formErrors,
-        },
+        error: error as AppError,
       },
       { status: 400, headers },
     );
@@ -52,7 +60,10 @@ export default function SigninRoute({ actionData }: Route.ComponentProps) {
   return (
     <main className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <LoginForm />
+        <LoginForm
+          initialFormErrors={actionData?.error?.formErrors}
+          initialFieldError={actionData?.error?.fieldErrors}
+        />
       </div>
     </main>
   );

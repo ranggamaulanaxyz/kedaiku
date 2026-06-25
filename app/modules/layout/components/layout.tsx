@@ -1,9 +1,11 @@
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import LayoutSidebar from "./sidebar";
 import { LayoutHeader } from "./header";
+
 interface LayoutProps {
   children: React.ReactNode;
 }
+
 export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider

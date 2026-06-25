@@ -9,22 +9,27 @@
             "type": "node-terminal",
             "request": "launch",
             "command": "npm run dev -- --host",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "sourceMaps": true
         },
         {
             "name": "Debug Client (Chrome)",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true
         },
         {
             "name": "Attach to Cloudflare Worker",
             "type": "node",
             "request": "attach",
             "port": 9229,
-            "websocketAddress": "ws://localhost:9229/my-react-router-app",
+            "websocketAddress": "ws://127.0.0.1:9229/core:user:kedaiku",
+            "cwd": "${workspaceFolder}",
             "resolveSourceMapLocations": null,
+            "attachExistingChildren": false,
+            "autoAttachChildProcesses": false,
             "sourceMaps": true
         }
     ],
@@ -33,7 +38,8 @@
             "name": "Debug Full-Stack (Client & Server)",
             "configurations": [
                 "Debug Server (React Router)",
-                "Debug Client (Chrome)"
+                "Debug Client (Chrome)",
+                "Attach to Cloudflare Worker"
             ]
         }
     ]

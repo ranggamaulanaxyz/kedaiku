@@ -1,8 +1,4 @@
-import { requireAuthMiddleware } from "~/modules/auth/middleware";
-import type { Route } from "./+types/dashboard";
-import SectionCards from "./components/section-cards";
-
-export const middleware: Route.MiddlewareFunction[] = [requireAuthMiddleware];
+import SectionCards from "../components/section-cards";
 
 export const handle = {
   breadcrumb: "Dashboard",

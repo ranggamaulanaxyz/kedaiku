@@ -1,8 +1,12 @@
 import { redirect, type RouterContextProvider } from "react-router";
 import { supabaseClientContext } from "../supabase/context";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { ResetPasswordRequestSchema, ResetPasswordSchema, SigninSchema } from "./schemas";
-import type { Partner, Token } from "./types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  ResetPasswordRequestSchema,
+  ResetPasswordSchema,
+  SigninSchema,
+} from "./schemas";
+import type { User, Partner, Token } from "./types";
 import type { AppError } from "~/types";
 
 export class AuthService {
@@ -41,26 +45,35 @@ export class AuthService {
   }
 
   async getUser(): Promise<User | null> {
-    const { data } = await this.supabase.auth.getUser();
-    if (data.user) {
-      return data.user;
+    const { data, error } = await this.supabase.auth.getUser();
+    if (error) {
+      console.error("Failed to fetch user", error);
+      return null;
+    }
+
+    const partner = await this.getPartner(data.user.id);
+    if (partner) {
+      return {
+        id: data.user.id,
+        name: partner.name,
+        email: data.user.email,
+      };
     }
 
     return null;
   }
 
-  async getPartner(): Promise<Partner | null> {
-    const user = await this.getUser();
-
-    if (!user) {
-      return null;
-    }
-
+  async getPartner(id: string): Promise<Partner | null> {
     const { data: partner, error } = await this.supabase
       .from("partners")
       .select("id, name")
-      .eq("id", user.id)
+      .eq("id", id)
       .single();
+
+    if (error) {
+      console.error("Failed to fetch partner", error);
+      return null;
+    }
 
     if (partner) {
       return partner;
@@ -71,7 +84,7 @@ export class AuthService {
 
   async resetPasswordRequest(
     data: ResetPasswordRequestSchema,
-  ): Promise<{isSent: boolean, error: AppError | null}> {
+  ): Promise<{ isSent: boolean; error: AppError | null }> {
     const { error } = await this.supabase.auth.resetPasswordForEmail(
       data.email,
       {
@@ -79,13 +92,16 @@ export class AuthService {
       },
     );
     if (error) {
-      return {isSent: false, error:{
-      fieldErrors: {
-        email: [{message: error?.message}]
-      }
-    }};
+      return {
+        isSent: false,
+        error: {
+          fieldErrors: {
+            email: [{ message: error?.message }],
+          },
+        },
+      };
     }
-    return {isSent: true, error: null}
+    return { isSent: true, error: null };
   }
 
   async resetPassword(

@@ -1,5 +1,5 @@
 import { redirect, type RouterContextProvider } from "react-router";
-import { authServiceContext } from "./context";
+import { authServiceContext, userContext } from "./context";
 import { AuthService } from "./service";
 
 export async function authMiddleware({
@@ -21,6 +21,11 @@ export async function requireAuthMiddleware({
 }) {
   const authService = context.get(authServiceContext);
   const isAuthenticated = await authService.authenticated();
+
+  const user = await authService.getUser();
+  if (user) {
+    context.set(userContext, user);
+  }
 
   if (!isAuthenticated) {
     throw redirect("/");

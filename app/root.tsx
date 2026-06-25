@@ -29,10 +29,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export const middleware: Route.MiddlewareFunction[] = [
-  supabaseMiddleware,
-  authMiddleware,
-];
+export const middleware: Route.MiddlewareFunction[] = [supabaseMiddleware, authMiddleware];
 
 function ProgressBar() {
   const navigation = useNavigation();

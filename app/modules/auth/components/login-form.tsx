@@ -14,7 +14,7 @@ import {
   FieldError,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { Form, Link, useNavigation } from "react-router";
+import { Form, Link, useNavigation, useSubmit } from "react-router";
 import type { ValidationError, ValidationErrorDetails } from "~/types";
 import {
   useEffect,
@@ -45,6 +45,7 @@ export function LoginForm({
   const isSubmitting = navigation.state === "submitting";
 
   const { isMounted } = useClient();
+  const submit = useSubmit();
 
   useEffect(() => {
     if (initialFormErrors) {
@@ -80,7 +81,19 @@ export function LoginForm({
   };
 
   const handleFormSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
-    console.log("masuk");
+    e.preventDefault();
+    const currentTarget = e.currentTarget;
+    const formData = new FormData(currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const result = await SigninSchema.safeParseAsync({ email, password });
+    if (result.success) {
+      submit(currentTarget);
+    } else {
+      const errors = formatError<keyof SigninSchema>(result.error);
+      setFieldErrors(errors);
+    }
   };
 
   return (
