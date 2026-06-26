@@ -17,10 +17,7 @@ export default function Layout({ children }: LayoutProps) {
       }
     >
       <LayoutSidebar />
-      <SidebarInset>
-        <LayoutHeader />
-        {children}
-      </SidebarInset>
+      <SidebarInset className="min-w-0">{children}</SidebarInset>
     </SidebarProvider>
   );
 }

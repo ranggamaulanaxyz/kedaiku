@@ -4,10 +4,14 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 import { Breadcrumbs } from "./breadcrumbs";
 import { useMatches } from "react-router";
 
-export function LayoutHeader() {
+interface LayputHeaderProps {
+  children?: React.ReactNode;
+}
+
+export function LayoutHeader({ children }: LayputHeaderProps) {
   const matches = useMatches();
   const hasBreadcrumbs = matches.some(
-    (match) => match.handle && (match.handle as any).breadcrumb
+    (match) => match.handle && (match.handle as any).breadcrumb,
   );
 
   return (
@@ -21,18 +25,7 @@ export function LayoutHeader() {
           />
         )}
         <Breadcrumbs />
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-            <a
-              href="https://github.com/ranggamaulanaxyz"
-              rel="noopener noreferrer"
-              target="_blank"
-              className="dark:text-foreground"
-            >
-              GitHub
-            </a>
-          </Button>
-        </div>
+        <div className="ml-auto flex items-center gap-2">{children}</div>
       </div>
     </header>
   );
