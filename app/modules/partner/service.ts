@@ -12,7 +12,10 @@ export class PartnerService {
 
   async getPartners(): Promise<PartnerSchema[]> {
     const partners = await this.partnerRepository.findAll();
-    console.log(partners);
     return partners;
+  }
+
+  async getPartnerById(id: string): Promise<PartnerSchema | null> {
+    return this.partnerRepository.findById(id);
   }
 }

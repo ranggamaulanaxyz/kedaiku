@@ -8,45 +8,36 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
+import type { RouteHandle } from "../types";
 
 export function Breadcrumbs() {
   const matches = useMatches();
 
-  const crumbs = matches
-    .filter((match) => match.handle && (match.handle as any).breadcrumb)
+  const breadcrumbs = matches
+    .filter((match) =>
+      Boolean((match.handle as RouteHandle)?.handleBreadcrumbs),
+    )
     .map((match) => {
-      const handle = match.handle as any;
-      const breadcrumb =
-        typeof handle.breadcrumb === "function"
-          ? handle.breadcrumb(match)
-          : handle.breadcrumb;
-
       return {
-        id: match.id,
-        pathname: match.pathname,
-        breadcrumb,
+        label: (match.handle as RouteHandle)?.handleBreadcrumbs?.(match) ?? "",
+        to: match.pathname,
       };
     });
-
-  if (crumbs.length === 0) return null;
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {crumbs.map((crumb, index) => {
-          const isLast = index === crumbs.length - 1;
+        {breadcrumbs.map((crumb, index) => {
           return (
-            <React.Fragment key={crumb.id}>
+            <React.Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
-                {isLast ? (
-                  <BreadcrumbPage className="font-semibold truncate max-w-[120px] sm:max-w-[200px]">
-                    {crumb.breadcrumb}
-                  </BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild className="truncate max-w-[120px] sm:max-w-[200px]">
-                    <Link to={crumb.pathname}>{crumb.breadcrumb}</Link>
+                {crumb.to ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={crumb.to}>{crumb.label}</Link>
                   </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

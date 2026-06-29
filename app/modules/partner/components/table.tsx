@@ -13,6 +13,16 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
+import { useNavigation } from "react-router";
+import { Skeleton } from "~/components/ui/skeleton";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from "~/components/ui/context-menu";
+import { toast } from "sonner";
 
 const useSafeLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -22,7 +32,10 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-interface DataTableInnerProps<TData, TValue> extends DataTableProps<TData, TValue> {
+interface DataTableInnerProps<TData, TValue> extends DataTableProps<
+  TData,
+  TValue
+> {
   containerWidth: number;
 }
 
@@ -32,6 +45,13 @@ function DataTableInner<TData, TValue>({
   containerWidth,
 }: DataTableInnerProps<TData, TValue>) {
   const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
+    null,
+  );
+
+  const navigation = useNavigation();
+  const isLoading = navigation.state !== "idle";
 
   const colCount = columns.length;
   const calculatedDefaultSize =
@@ -39,11 +59,19 @@ function DataTableInner<TData, TValue>({
       ? Math.floor(containerWidth / colCount)
       : 150;
 
-  const columnIds = columns.map((c: any) => c.id || c.accessorKey || "").join(",");
+  const columnIds = columns
+    .map((c: any) => c.id || c.accessorKey || "")
+    .join(",");
 
   useEffect(() => {
     setColumnSizing({});
   }, [columnIds]);
+
+  useEffect(() => {
+    if (Object.keys(rowSelection).length === 0) {
+      setLastSelectedIndex(null);
+    }
+  }, [rowSelection]);
 
   const memoizedColumns = useMemo(() => {
     return [...columns];
@@ -54,8 +82,12 @@ function DataTableInner<TData, TValue>({
     columns: memoizedColumns,
     state: {
       columnSizing,
+      rowSelection,
     },
     onColumnSizingChange: setColumnSizing,
+    onRowSelectionChange: setRowSelection,
+    enableRowSelection: true,
+    enableMultiRowSelection: true,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: "onChange",
     defaultColumn: {
@@ -67,9 +99,88 @@ function DataTableInner<TData, TValue>({
   const isSizingLess = table.getCenterTotalSize() < containerWidth;
   const tableWidth = isSizingLess ? "100%" : table.getCenterTotalSize();
 
+  const openRows = (targetRow?: any) => {
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    // If targetRow is not in selected rows, open just targetRow
+    if (targetRow && !targetRow.getIsSelected()) {
+      window.location.href = `/app/partners/${(targetRow.original as any).id}`;
+      return;
+    }
+
+    if (selectedRows.length === 0) {
+      if (targetRow) {
+        window.location.href = `/app/partners/${(targetRow.original as any).id}`;
+      }
+      return;
+    }
+
+    if (selectedRows.length === 1) {
+      window.location.href = `/app/partners/${(selectedRows[0].original as any).id}`;
+    } else {
+      // Multi-selection: open each in a new tab
+      selectedRows.forEach((r) => {
+        window.open(`/app/partners/${(r.original as any).id}`, "_blank");
+      });
+    }
+  };
+
+  const copySelectedRows = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    // Format headers and rows
+    const headers = table
+      .getVisibleFlatColumns()
+      .map((col) => {
+        const def = col.columnDef;
+        return typeof def.header === "string"
+          ? def.header
+          : String((def as any).accessorKey || col.id);
+      })
+      .join("\t");
+
+    const rowsText = selectedRows
+      .map((row) => {
+        return row
+          .getVisibleCells()
+          .map((cell) => {
+            return String(cell.getValue() ?? "");
+          })
+          .join("\t");
+      })
+      .join("\n");
+
+    const textToCopy = `${headers}\n${rowsText}`;
+
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        toast.success(
+          `Copied ${selectedRows.length} row${selectedRows.length > 1 ? "s" : ""} to clipboard`,
+        );
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+        toast.error("Failed to copy to clipboard");
+      });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+      const selectedRows = table.getSelectedRowModel().rows;
+      if (selectedRows.length > 0) {
+        e.preventDefault();
+        copySelectedRows();
+      }
+    }
+  };
+
   return (
     <Table
-      className="table-fixed"
+      className="table-fixed outline-none"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       style={{
         width: tableWidth,
       }}
@@ -105,23 +216,123 @@ function DataTableInner<TData, TValue>({
         ))}
       </TableHeader>
       <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow
-            key={row.id}
-            data-state={row.getIsSelected() && "selected"}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <TableCell
-                key={cell.id}
-                className="truncate"
-                style={{ width: cell.column.getSize() }}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-            {isSizingLess && <TableCell className="p-0" />}
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, rowIndex) => (
+            <TableRow key={`skeleton-row-${rowIndex}`}>
+              {table.getVisibleFlatColumns().map((column, colIndex) => (
+                <TableCell
+                  key={`skeleton-col-${colIndex}`}
+                  style={{ width: column.getSize() }}
+                >
+                  <Skeleton className="my-1 h-4 w-[80%]" />
+                </TableCell>
+              ))}
+              {isSizingLess && <TableCell className="p-0" />}
+            </TableRow>
+          ))
+        ) : table.getRowModel().rows.length === 0 ? (
+          <TableRow>
+            <TableCell
+              colSpan={
+                table.getVisibleFlatColumns().length + (isSizingLess ? 1 : 0)
+              }
+              className="h-24 text-center"
+            >
+              No results.
+            </TableCell>
           </TableRow>
-        ))}
+        ) : (
+          table.getRowModel().rows.map((row) => (
+            <ContextMenu key={row.id}>
+              <ContextMenuTrigger asChild>
+                <TableRow
+                  data-state={row.getIsSelected() && "selected"}
+                  onClick={(e) => {
+                    const rows = table.getRowModel().rows;
+                    const currentIndex = row.index;
+
+                    if (e.shiftKey && lastSelectedIndex !== null) {
+                      const start = Math.min(lastSelectedIndex, currentIndex);
+                      const end = Math.max(lastSelectedIndex, currentIndex);
+                      const newSelection: Record<string, boolean> = {};
+
+                      if (e.metaKey || e.ctrlKey) {
+                        Object.assign(newSelection, rowSelection);
+                      }
+
+                      for (let i = start; i <= end; i++) {
+                        newSelection[rows[i].id] = true;
+                      }
+                      setRowSelection(newSelection);
+                    } else if (e.metaKey || e.ctrlKey) {
+                      // Toggle selection
+                      row.toggleSelected(!row.getIsSelected());
+                    } else {
+                      // Single selection
+                      table.resetRowSelection();
+                      row.toggleSelected(true);
+                    }
+                    setLastSelectedIndex(currentIndex);
+                  }}
+                  onDoubleClick={() => openRows(row)}
+                  onContextMenu={(e) => {
+                    if (!row.getIsSelected()) {
+                      table.resetRowSelection();
+                      row.toggleSelected(true);
+                      setLastSelectedIndex(row.index);
+                    }
+                  }}
+                  className="cursor-pointer select-none"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="truncate"
+                      style={{ width: cell.column.getSize() }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                  {isSizingLess && <TableCell className="p-0" />}
+                </TableRow>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onSelect={() => openRows(row)}>
+                  Open
+                  {table.getSelectedRowModel().rows.length > 1
+                    ? ` (${table.getSelectedRowModel().rows.length} items)`
+                    : ""}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onSelect={() => {
+                    alert(
+                      `Edit partner: ${(row.original as any).name || row.id}`,
+                    );
+                  }}
+                >
+                  Edit
+                </ContextMenuItem>
+                <ContextMenuItem onSelect={copySelectedRows}>
+                  Copy
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onSelect={() => {
+                    alert(
+                      `Delete partner: ${(row.original as any).name || row.id}`,
+                    );
+                  }}
+                  className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
+                  Delete
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          ))
+        )}
       </TableBody>
     </Table>
   );
@@ -161,7 +372,15 @@ export function DataTable<TData, TValue>({
             containerWidth={containerWidth}
           />
         ) : (
-          <div className="h-32 w-full animate-pulse bg-muted/50" />
+          <div className="space-y-4 p-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-6 flex-1" />
+              <Skeleton className="h-6 flex-1" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         )}
       </div>
     </div>

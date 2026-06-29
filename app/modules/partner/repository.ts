@@ -18,4 +18,19 @@ export class PartnerRepository {
 
     return data as PartnerSchema[];
   }
+
+  async findById(id: string): Promise<PartnerSchema | null> {
+    const { data, error } = await this.supabase
+      .from("partners")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    return data as PartnerSchema;
+  }
 }
