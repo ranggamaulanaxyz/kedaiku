@@ -10,29 +10,44 @@ import {
 } from "~/components/ui/breadcrumb";
 import type { RouteHandle } from "../types";
 
+const getBreadcrumbLabel = (match: any): string => {
+  const handle = match.handle as any;
+  if (!handle) return "";
+  if (typeof handle.handleBreadcrumbs === "function") {
+    return handle.handleBreadcrumbs(match);
+  }
+  if (typeof handle.breadcrumb === "function") {
+    return handle.breadcrumb(match);
+  }
+  if (typeof handle.breadcrumb === "string") {
+    return handle.breadcrumb;
+  }
+  return "";
+};
+
 export function Breadcrumbs() {
   const matches = useMatches();
 
   const breadcrumbs = matches
-    .filter((match) =>
-      Boolean((match.handle as RouteHandle)?.handleBreadcrumbs),
-    )
-    .map((match) => {
-      return {
-        label: (match.handle as RouteHandle)?.handleBreadcrumbs?.(match) ?? "",
-        to: match.pathname,
-      };
-    });
+    .map((match) => ({
+      label: getBreadcrumbLabel(match),
+      to: match.pathname,
+    }))
+    .filter((crumb) => Boolean(crumb.label))
+    .filter((crumb, index, self) =>
+      self.findIndex((c) => c.to === crumb.to) === index,
+    );
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
         {breadcrumbs.map((crumb, index) => {
+          const isLast = index === breadcrumbs.length - 1;
           return (
             <React.Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
-                {crumb.to ? (
+                {crumb.to && !isLast ? (
                   <BreadcrumbLink asChild>
                     <Link to={crumb.to}>{crumb.label}</Link>
                   </BreadcrumbLink>
@@ -47,3 +62,4 @@ export function Breadcrumbs() {
     </Breadcrumb>
   );
 }
+

@@ -14,7 +14,7 @@ export default [
     route("/app/dashboard", "modules/dashboard/routes/dashboard.tsx"),
 
     // Contact
-    route("/app/partners", "modules/partner/routes/layout.tsx", [
+    route("/app/partners", "modules/partner/routes/partner.tsx", [
       index("modules/partner/routes/list.tsx"),
       route("/app/partners/:id", "modules/partner/routes/form.tsx"),
     ]),

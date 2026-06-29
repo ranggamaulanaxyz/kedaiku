@@ -4,7 +4,7 @@ import type { Route } from "./+types/form";
 import type { RouteHandle } from "~/modules/layout/types";
 
 export const handle: RouteHandle = {
-  handleBreadcrumbs: () => "Form",
+  breadcrumb: () => "Form",
 };
 
 export async function loader({ params, context }: Route.LoaderArgs) {

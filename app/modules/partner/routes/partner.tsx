@@ -1,6 +1,7 @@
-import { Search } from "lucide-react";
-import { Outlet } from "react-router";
+import { Plus, Search } from "lucide-react";
+import { Link, Outlet } from "react-router";
 import { Fragment } from "react/jsx-runtime";
+import { Button } from "~/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
@@ -8,8 +9,13 @@ import {
 } from "~/components/ui/input-group";
 import { Kbd } from "~/components/ui/kbd";
 import { LayoutHeader } from "~/modules/layout/components/header";
+import type { RouteHandle } from "~/modules/layout/types";
 
-export default function PartnerLayoutRoute() {
+export const handle: RouteHandle = {
+  breadcrumb: () => "Partners",
+};
+
+export default function PartnerRoute() {
   return (
     <Fragment>
       <LayoutHeader>
@@ -23,6 +29,9 @@ export default function PartnerLayoutRoute() {
             <Kbd>K</Kbd>
           </InputGroupAddon>
         </InputGroup>
+        <Button asChild>
+          <Link to="new">Tambah</Link>
+        </Button>
       </LayoutHeader>
       <Outlet />
     </Fragment>

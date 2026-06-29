@@ -1,3 +1,3 @@
 export interface RouteHandle {
-  handleBreadcrumbs?: (match: any) => string;
+  breadcrumb?: string | ((match: any) => string);
 }

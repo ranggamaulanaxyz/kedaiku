@@ -13,7 +13,7 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { useNavigation } from "react-router";
+import { useNavigate, useNavigation } from "react-router";
 import { Skeleton } from "~/components/ui/skeleton";
 import {
   ContextMenu,
@@ -49,6 +49,8 @@ function DataTableInner<TData, TValue>({
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
     null,
   );
+
+  const navigate = useNavigate();
 
   const navigation = useNavigation();
   const isLoading = navigation.state !== "idle";
@@ -104,22 +106,23 @@ function DataTableInner<TData, TValue>({
 
     // If targetRow is not in selected rows, open just targetRow
     if (targetRow && !targetRow.getIsSelected()) {
-      window.location.href = `/app/partners/${(targetRow.original as any).id}`;
+      navigate(`/app/partners/${(targetRow.original as any).id}`);
       return;
     }
 
     if (selectedRows.length === 0) {
       if (targetRow) {
-        window.location.href = `/app/partners/${(targetRow.original as any).id}`;
+        navigate(`/app/partners/${(targetRow.original as any).id}`);
       }
       return;
     }
 
     if (selectedRows.length === 1) {
-      window.location.href = `/app/partners/${(selectedRows[0].original as any).id}`;
+      navigate(`/app/partners/${(selectedRows[0].original as any).id}`);
     } else {
       // Multi-selection: open each in a new tab
       selectedRows.forEach((r) => {
+        console.log("test");
         window.open(`/app/partners/${(r.original as any).id}`, "_blank");
       });
     }
@@ -360,29 +363,24 @@ export function DataTable<TData, TValue>({
   }, []);
 
   return (
-    <div className="p-1">
-      <div
-        ref={containerRef}
-        className="max-w-full overflow-auto rounded border"
-      >
-        {containerWidth > 0 ? (
-          <DataTableInner
-            columns={columns}
-            data={data}
-            containerWidth={containerWidth}
-          />
-        ) : (
-          <div className="space-y-4 p-4">
-            <div className="flex gap-4">
-              <Skeleton className="h-6 flex-1" />
-              <Skeleton className="h-6 flex-1" />
-            </div>
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+    <div ref={containerRef} className="max-w-full overflow-auto">
+      {containerWidth > 0 ? (
+        <DataTableInner
+          columns={columns}
+          data={data}
+          containerWidth={containerWidth}
+        />
+      ) : (
+        <div className="space-y-4 p-4">
+          <div className="flex gap-4">
+            <Skeleton className="h-6 flex-1" />
+            <Skeleton className="h-6 flex-1" />
           </div>
-        )}
-      </div>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      )}
     </div>
   );
 }

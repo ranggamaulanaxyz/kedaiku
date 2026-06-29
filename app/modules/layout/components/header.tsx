@@ -11,7 +11,9 @@ interface LayputHeaderProps {
 export function LayoutHeader({ children }: LayputHeaderProps) {
   const matches = useMatches();
   const hasBreadcrumbs = matches.some(
-    (match) => match.handle && (match.handle as any).breadcrumb,
+    (match) =>
+      match.handle &&
+      ((match.handle as any).breadcrumb || (match.handle as any).handleBreadcrumbs),
   );
 
   return (
