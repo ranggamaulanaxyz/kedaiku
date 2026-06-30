@@ -33,11 +33,6 @@ export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
   const { partners } = loaderData;
   const columns: ColumnDef<PartnerSchema>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-      enableResizing: true,
-    },
-    {
       accessorKey: "name",
       header: "Nama",
       enableResizing: true,
@@ -49,7 +44,7 @@ export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
     },
   ];
   return (
-    <main className="p-1">
+    <main className="p-4">
       <Card className="gap-0 p-0">
         <div className="flex justify-between gap-4 border-b p-2">
           <div></div>

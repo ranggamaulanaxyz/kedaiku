@@ -46,28 +46,28 @@ interface MenuItem {
 const data: MenuItem[] = [
   {
     type: "menu",
-    name: "Dashboard",
+    name: "Dasbor",
     to: "/app/dashboard",
     icon: LayoutDashboard,
   },
   {
     type: "menu",
-    name: "Sales",
+    name: "Penjualan",
     to: "/app/sale",
     icon: BadgeDollarSign,
   },
   {
     type: "menu",
-    name: "Inventory",
+    name: "Inventaris",
     icon: Package,
     children: [
-      { type: "menu", name: "Products", to: "/app/products" },
-      { type: "menu", name: "Stock", to: "/app/stock" },
+      { type: "menu", name: "Produk", to: "/app/products" },
+      { type: "menu", name: "Stok", to: "/app/stock" },
     ],
   },
   {
     type: "menu",
-    name: "Contacts",
+    name: "Kontak",
     icon: Contact,
     to: "/app/partners",
   },
@@ -93,8 +93,8 @@ function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
             {item.children?.map((child) => {
               const isActive = child.to
                 ? location.pathname === child.to ||
-                  (navigation.location &&
-                    navigation.location.pathname === child.to)
+                (navigation.location &&
+                  navigation.location.pathname === child.to)
                 : false;
 
               return (
@@ -120,7 +120,7 @@ function LayoutSidebarMenuItem({ item }: { item: MenuItem }) {
   const navigation = useNavigation();
   const isActive = item.to
     ? location.pathname === item.to ||
-      (navigation.location && navigation.location.pathname === item.to)
+    (navigation.location && navigation.location.pathname === item.to)
     : false;
 
   return (
@@ -169,7 +169,7 @@ export default function LayoutSidebar({
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarGroupLabel>Apps</SidebarGroupLabel>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
             <SidebarMenu>
               <LayoutSidebarMenuRender />
             </SidebarMenu>
@@ -190,7 +190,7 @@ export default function LayoutSidebar({
                 <SidebarMenuButton asChild>
                   <NavLink to="#">
                     <Search />
-                    <span>Search</span>
+                    <span>Pencarian</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -12,7 +12,7 @@ import { LayoutHeader } from "~/modules/layout/components/header";
 import type { RouteHandle } from "~/modules/layout/types";
 
 export const handle: RouteHandle = {
-  breadcrumb: () => "Partners",
+  breadcrumb: () => "Kontak",
 };
 
 export default function PartnerRoute() {
@@ -20,7 +20,7 @@ export default function PartnerRoute() {
     <Fragment>
       <LayoutHeader>
         <InputGroup>
-          <InputGroupInput placeholder="Type contact name, email or phone number" />
+          <InputGroupInput placeholder="Ketik disini untuk mencari..." />
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>

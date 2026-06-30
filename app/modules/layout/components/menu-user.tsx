@@ -75,22 +75,22 @@ export function LayoutSidebarMenuUser() {
           <DropdownMenuGroup>
             <DropdownMenuItem>
               <UserCircle />
-              Account
+              Akun
             </DropdownMenuItem>
             <DropdownMenuItem>
               <CreditCard />
-              Billing
+              Tagihan
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Bell />
-              Notifications
+              Pemberitahuan
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link to="/signout">
               <LogOut />
-              <span>Sign Out</span>
+              <span>Keluar</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
