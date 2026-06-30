@@ -16,6 +16,7 @@ export const handle: RouteHandle = {
 };
 
 export default function PartnerRoute() {
+  const handleSave = () => {};
   return (
     <Fragment>
       <LayoutHeader>
@@ -29,6 +30,7 @@ export default function PartnerRoute() {
             <Kbd>K</Kbd>
           </InputGroupAddon>
         </InputGroup>
+        <Button onClick={handleSave}>Simpan</Button>
         <Button asChild>
           <Link to="new">Tambah</Link>
         </Button>

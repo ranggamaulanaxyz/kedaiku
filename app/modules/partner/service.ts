@@ -18,4 +18,10 @@ export class PartnerService {
   async getPartnerById(id: string): Promise<PartnerSchema | null> {
     return this.partnerRepository.findById(id);
   }
+
+  async createPartner(
+    partner: Omit<PartnerSchema, "id">,
+  ): Promise<PartnerSchema | null> {
+    return this.partnerRepository.create(partner);
+  }
 }

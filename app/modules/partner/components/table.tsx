@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useLayoutEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -24,9 +24,6 @@ import {
   ContextMenuSeparator,
 } from "~/components/ui/context-menu";
 import { toast } from "sonner";
-
-const useSafeLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -151,7 +148,7 @@ function ReactDataTable<TData, TValue>({
       row.toggleSelected(true);
     }
     setLastSelectedIndex(currentIndex);
-  }
+  };
 
   const resetSelectedRow = (row: Row<TData>) => {
     if (!row.getIsSelected()) {
@@ -159,7 +156,7 @@ function ReactDataTable<TData, TValue>({
       row.toggleSelected(true);
       setLastSelectedIndex(row.index);
     }
-  }
+  };
 
   const copySelectedRows = () => {
     const selectedRows = table.getSelectedRowModel().rows;
@@ -233,15 +230,16 @@ function ReactDataTable<TData, TValue>({
                 {header.isPlaceholder
                   ? null
                   : flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                 {header.column.getCanResize() && (
                   <div
                     onMouseDown={header.getResizeHandler()}
                     onTouchStart={header.getResizeHandler()}
-                    className={`hover:bg-primary/50 absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none select-none ${header.column.getIsResizing() ? "bg-primary w-1" : ""
-                      }`}
+                    className={`hover:bg-primary/50 absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none select-none ${
+                      header.column.getIsResizing() ? "bg-primary w-1" : ""
+                    }`}
                   />
                 )}
               </TableHead>
@@ -267,10 +265,7 @@ function ReactDataTable<TData, TValue>({
                     className="truncate"
                     style={{ width: cell.column.getSize() }}
                   >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext(),
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
                 {isSizingLess && <TableCell className="p-0" />}
@@ -314,7 +309,10 @@ function ReactDataTable<TData, TValue>({
   );
 }
 
-function ReactDataTableSkeleton<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+function ReactDataTableSkeleton<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns: columns,
@@ -334,9 +332,9 @@ function ReactDataTableSkeleton<TData, TValue>({ columns, data }: DataTableProps
                 {header.isPlaceholder
                   ? null
                   : flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
               </TableHead>
             ))}
           </TableRow>
@@ -344,9 +342,7 @@ function ReactDataTableSkeleton<TData, TValue>({ columns, data }: DataTableProps
       </TableHeader>
       <TableBody>
         {table.getRowModel().rows.map((row) => (
-          <TableRow
-            className="cursor-pointer select-none"
-          >
+          <TableRow className="cursor-pointer select-none">
             {row.getVisibleCells().map((cell) => (
               <TableCell
                 key={cell.id}
@@ -360,7 +356,7 @@ function ReactDataTableSkeleton<TData, TValue>({ columns, data }: DataTableProps
         ))}
       </TableBody>
     </Table>
-  )
+  );
 }
 
 export function DataTable<TData, TValue>({
@@ -370,7 +366,7 @@ export function DataTable<TData, TValue>({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  useSafeLayoutEffect(() => {
+  useEffect(() => {
     if (!containerRef.current) return;
 
     // Measure layout width synchronously on client mount
@@ -392,7 +388,9 @@ export function DataTable<TData, TValue>({
           data={data}
           containerWidth={containerWidth}
         />
-      ) : (<ReactDataTableSkeleton columns={columns} data={data} />)}
+      ) : (
+        <ReactDataTableSkeleton columns={columns} data={data} />
+      )}
     </div>
   );
 }
