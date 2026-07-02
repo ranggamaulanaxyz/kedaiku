@@ -342,7 +342,7 @@ function ReactDataTableSkeleton<TData, TValue>({
       </TableHeader>
       <TableBody>
         {table.getRowModel().rows.map((row) => (
-          <TableRow className="cursor-pointer select-none">
+          <TableRow key={row.id} className="cursor-pointer select-none">
             {row.getVisibleCells().map((cell) => (
               <TableCell
                 key={cell.id}

@@ -11,13 +11,13 @@ export class PartnerRepository {
   }
 
   async findAll(): Promise<PartnerSchema[]> {
-    const { data, error } = await this.supabase.from("partners").select("*");
+    const { data, error } = await this.supabase.from("partners").select("*, country_state:country_states(*), country:countries(*)");
     if (error) {
       console.error(error);
       return [];
     }
 
-    return data as PartnerSchema[];
+    return camelcaseKeys(data, {deep: true}) as PartnerSchema[];
   }
 
   async findById(id: string): Promise<PartnerSchema | null> {

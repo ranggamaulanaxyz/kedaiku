@@ -42,6 +42,31 @@ export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
       header: "Email",
       enableResizing: true,
     },
+    {
+      accessorKey: "address",
+      header: "Alamat",
+      enableResizing: true,
+    },
+    {
+      accessorKey: "address2",
+      header: "Alamat 2",
+      enableResizing: true,
+    },
+    {
+      accessorKey: "city",
+      header: "Kota",
+      enableResizing: true,
+    },
+    {
+      accessorKey: "countryState.name",
+      header: "Provinsi",
+      enableResizing: true,
+    },
+    {
+      accessorKey: "country.name",
+      header: "Negara",
+      enableResizing: true,
+    },
   ];
   return (
     <main className="p-4">
