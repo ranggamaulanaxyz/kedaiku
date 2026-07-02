@@ -29,26 +29,62 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const rawData = Object.fromEntries(formData);
   const data = snakecaseKeys(rawData, { deep: true });
-  const result = await PartnerSchema.omit({ id: true }).safeParseAsync(data);
-  if (result.success) {
-    const partner = await partnerService.createPartner(result.data);
+  const { success, validatedData, error } = await partnerService.validate(data);
+  if (success) {
+    if (params.id === "new") {
+      const partner = await partnerService.createPartner(validatedData);
+      return { partner };
+    }
+    const partner = await partnerService.updatePartner(
+      params.id,
+      validatedData,
+    );
     return { partner };
   }
+
+  console.log(data);
 
   return {
     partner: null,
     error: {
-      fieldErrors: { email: [{ message: "Format email tidak benar!" }] },
+      fieldErrors: error,
     },
   };
 }
 
-export default function PartnerFormRoute({ loaderData }: Route.ComponentProps) {
+export async function clientAction({
+  request,
+  context,
+  serverAction,
+}: Route.ClientActionArgs) {
+  const partnerService = new PartnerService(context);
+  const formData = await request.clone().formData();
+  const rawData = Object.fromEntries(formData);
+  const data = snakecaseKeys(rawData, { deep: true });
+  const { success, error } = await partnerService.validate(data);
+  if (success) {
+    return await serverAction();
+  }
+  return {
+    success,
+    error: {
+      fieldErrors: error,
+    },
+  };
+}
+
+export default function PartnerFormRoute({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const error = {
+    fieldErrors: actionData?.error?.fieldErrors || {},
+  };
   return (
     <main className="p-4">
       <Card>
         <CardContent>
-          <DataForm />
+          <DataForm error={error} />
         </CardContent>
       </Card>
     </main>

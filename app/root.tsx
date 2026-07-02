@@ -11,10 +11,11 @@ import { useEffect, useState } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { supabaseMiddleware } from "./modules/supabase/middleware";
+import { supabaseMiddleware } from "./modules/supabase/middleware.server";
 import { authMiddleware } from "./modules/auth/middleware";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { supabaseClientMiddleware } from "./modules/supabase/middleware.client";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -33,6 +34,10 @@ export const links: Route.LinksFunction = () => [
 export const middleware: Route.MiddlewareFunction[] = [
   supabaseMiddleware,
   authMiddleware,
+];
+
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
+  supabaseClientMiddleware,
 ];
 
 function ProgressBar() {

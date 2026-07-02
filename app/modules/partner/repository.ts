@@ -11,13 +11,15 @@ export class PartnerRepository {
   }
 
   async findAll(): Promise<PartnerSchema[]> {
-    const { data, error } = await this.supabase.from("partners").select("*, country_state:country_states(*), country:countries(*)");
+    const { data, error } = await this.supabase
+      .from("partners")
+      .select("*, country_state:country_states(*), country:countries(*)");
     if (error) {
       console.error(error);
       return [];
     }
 
-    return camelcaseKeys(data, {deep: true}) as PartnerSchema[];
+    return camelcaseKeys(data, { deep: true }) as PartnerSchema[];
   }
 
   async findById(id: string): Promise<PartnerSchema | null> {
@@ -51,4 +53,24 @@ export class PartnerRepository {
 
     return camelcaseKeys(data, { deep: true }) as PartnerSchema;
   }
+
+  async update(
+    id: string,
+    partner: Partial<Omit<PartnerSchema, "id">>,
+  ): Promise<PartnerSchema | null> {
+    const { data, error } = await this.supabase
+      .from("partners")
+      .update(partner)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    return camelcaseKeys(data, { deep: true }) as PartnerSchema;
+  }
 }
+
