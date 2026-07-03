@@ -19,8 +19,7 @@ import type { Route } from "./+types/list";
 import { PartnerService } from "../service";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PartnerSchema } from "../schemas";
-import type { RouteHandle } from "~/modules/layout/types";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const partnerService = new PartnerService(context);

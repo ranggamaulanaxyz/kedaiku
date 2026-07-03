@@ -4,11 +4,20 @@ import type { RouterContextProvider } from "react-router";
 import { PartnerRepository } from "./repository";
 import { PartnerSchema } from "./schemas";
 import { formatError } from "~/lib/utils";
+import { CountryRepository } from "../country/repositories/country_repository";
+import { StateCountryRepository } from "../country/repositories/state_country_repository";
+import type { CountrySchema, CountryStateSchema } from "../country/schemas";
+import snakecaseKeys from "snakecase-keys";
 
 export class PartnerService {
   partnerRepository: PartnerRepository;
+  countryRepository: CountryRepository;
+  stateCountryRepository: StateCountryRepository;
+
   constructor(private context: Readonly<RouterContextProvider>) {
     this.partnerRepository = new PartnerRepository(this.context);
+    this.countryRepository = new CountryRepository(this.context);
+    this.stateCountryRepository = new StateCountryRepository(this.context);
   }
 
   async getPartners(): Promise<PartnerSchema[]> {
@@ -46,5 +55,17 @@ export class PartnerService {
     partner: Partial<Omit<PartnerSchema, "id">>,
   ): Promise<PartnerSchema | null> {
     return this.partnerRepository.update(id, partner);
+  }
+
+  async getCountries(): Promise<CountrySchema[]> {
+    return this.countryRepository.findAll();
+  }
+
+  async getCountryStates(countryId?: string): Promise<CountryStateSchema[]> {
+    return this.stateCountryRepository.findAll(countryId);
+  }
+
+  async getCountryStateById(id: string): Promise<CountryStateSchema | null> {
+    return this.stateCountryRepository.findById(id);
   }
 }

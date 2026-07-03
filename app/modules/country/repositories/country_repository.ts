@@ -1,48 +1,48 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RouterContextProvider } from "react-router";
-import { supabaseClientContext } from "../supabase/context";
-import type { PartnerSchema } from "./schemas";
+import { supabaseClientContext } from "../../supabase/context";
+import type { CountrySchema } from "../schemas";
 import camelcaseKeys from "camelcase-keys";
-import snakecaseKeys from "snakecase-keys";
 
-export class PartnerRepository {
+export class CountryRepository {
   private supabase: SupabaseClient;
   constructor(private context: Readonly<RouterContextProvider>) {
     this.supabase = this.context.get(supabaseClientContext);
   }
 
-  async findAll(): Promise<PartnerSchema[]> {
+  async findAll(): Promise<CountrySchema[]> {
     const { data, error } = await this.supabase
-      .from("partners")
-      .select("*, country_state:country_states(*), country:countries(*)");
+      .from("countries")
+      .select("*");
     if (error) {
       console.error(error);
       return [];
     }
 
-    return camelcaseKeys(data, { deep: true }) as PartnerSchema[];
+    return camelcaseKeys(data, { deep: true }) as CountrySchema[];
   }
 
-  async findById(id: string): Promise<PartnerSchema | null> {
+  async findById(id: string): Promise<CountrySchema | null> {
     const { data, error } = await this.supabase
-      .from("partners")
+      .from("countries")
       .select("*")
       .eq("id", id)
       .single();
 
     if (error) {
+      console.error(error);
       return null;
     }
 
-    return camelcaseKeys(data) as PartnerSchema;
+    return camelcaseKeys(data, { deep: true }) as CountrySchema;
   }
 
   async create(
-    partner: Omit<PartnerSchema, "id">,
-  ): Promise<PartnerSchema | null> {
+    country: Omit<CountrySchema, "id">,
+  ): Promise<CountrySchema | null> {
     const { data, error } = await this.supabase
-      .from("partners")
-      .insert(snakecaseKeys(partner))
+      .from("countries")
+      .insert(country)
       .select()
       .single();
 
@@ -51,16 +51,16 @@ export class PartnerRepository {
       return null;
     }
 
-    return camelcaseKeys(data, { deep: true }) as PartnerSchema;
+    return camelcaseKeys(data, { deep: true }) as CountrySchema;
   }
 
   async update(
     id: string,
-    partner: Partial<Omit<PartnerSchema, "id">>,
-  ): Promise<PartnerSchema | null> {
+    country: Partial<Omit<CountrySchema, "id">>,
+  ): Promise<CountrySchema | null> {
     const { data, error } = await this.supabase
-      .from("partners")
-      .update(snakecaseKeys(partner))
+      .from("countries")
+      .update(country)
       .eq("id", id)
       .select()
       .single();
@@ -70,7 +70,6 @@ export class PartnerRepository {
       return null;
     }
 
-    return camelcaseKeys(data, { deep: true }) as PartnerSchema;
+    return camelcaseKeys(data, { deep: true }) as CountrySchema;
   }
 }
-

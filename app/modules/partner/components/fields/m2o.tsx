@@ -25,9 +25,10 @@ export default function Many2oneField({
 }: Many2oneFieldProps) {
   return (
     <Combobox
-      items={items}
-      itemToStringLabel={(item: any) => item?.name || item?.id || ""}
-      itemToStringValue={(item: any) => item?.id || "new"}
+      items={items?.map((item) => item.id)}
+      itemToStringLabel={(id) =>
+        items.find((item) => item.id === id)?.name || ""
+      }
       {...props}
     >
       <ComboboxInput
@@ -38,9 +39,9 @@ export default function Many2oneField({
       <ComboboxContent>
         <ComboboxEmpty>Tidak ada data.</ComboboxEmpty>
         <ComboboxList>
-          {(item) => (
-            <ComboboxItem key={item.id} value={item}>
-              {item.name}
+          {(id) => (
+            <ComboboxItem key={id} value={id}>
+              {items.find((item) => item.id === id)?.name || "Tidak ada nama"}
             </ComboboxItem>
           )}
         </ComboboxList>

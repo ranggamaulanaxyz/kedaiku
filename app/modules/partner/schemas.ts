@@ -1,20 +1,9 @@
 import z from "zod";
 import type { ValidationError } from "~/types";
-
-export const CountrySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
-export const CountryStateSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  countryID: z.string(),
-  country: CountrySchema.optional().nullable(),
-});
+import { CountrySchema, CountryStateSchema } from "../country/schemas";
 
 export const PartnerSchema = z.object({
-  id: z.string(),
+  id: z.uuid(),
   name: z.string().nonempty("Nama tidak boleh kosong"),
   type: z
     .enum(["individual", "company"], {
@@ -22,13 +11,15 @@ export const PartnerSchema = z.object({
     })
     .default("individual"),
   email: z.email("Alamat email tidak valid"),
-  address: z.string().optional(),
-  address2: z.string().optional(),
-  city: z.string().optional(),
-  countryStateID: z.string().optional(),
-  countryState: CountryStateSchema.optional().nullable(),
-  countryID: z.string().optional(),
-  country: CountrySchema.optional().nullable(),
+  mobile: z.string(),
+  address: z.string(),
+  address2: z.string(),
+  city: z.string(),
+  countryStateId: z.preprocess(val => val === "" ? null : val, z.uuid().nullable()),
+  countryState: CountryStateSchema.optional(),
+  countryId: z.preprocess(val => val === "" ? null : val, z.uuid().nullable()),
+  country: CountrySchema.optional(),
+  zip: z.string(),
 });
 
 export type PartnerSchema = z.infer<typeof PartnerSchema>;
