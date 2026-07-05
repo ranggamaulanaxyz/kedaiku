@@ -9,6 +9,8 @@ import { DataPagination } from "../components/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Grid2X2, Table2 } from "lucide-react";
 import { useSidebar } from "~/components/ui/sidebar";
+import { DataEmpty, DataNotFound } from "../components/empty";
+import { useSearchParams } from "react-router";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -30,6 +32,9 @@ export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
   const { partners, totalRecord, page, perPage } = loaderData;
   const { isMobile } = useSidebar();
   const [tab, setTab] = useState<string>("table");
+
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q");
 
   useEffect(() => {
     setTab(isMobile ? "grid" : "table");
@@ -74,6 +79,11 @@ export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
       enableResizing: true,
     },
   ];
+
+  if (partners.length === 0) {
+    return query ? <DataNotFound /> : <DataEmpty />;
+  }
+
   return (
     <Tabs value={tab} onValueChange={setTab} asChild>
       <main className="px-4">
