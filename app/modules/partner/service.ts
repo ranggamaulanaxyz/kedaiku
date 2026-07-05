@@ -20,9 +20,17 @@ export class PartnerService {
     this.stateCountryRepository = new StateCountryRepository(this.context);
   }
 
-  async getPartners(): Promise<PartnerSchema[]> {
-    const partners = await this.partnerRepository.findAll();
-    return partners;
+  async getPartners(
+    q?: string,
+    page?: number,
+    perPage?: number,
+  ): Promise<{ partners: PartnerSchema[]; totalRecord: number }> {
+    const { data, count } = await this.partnerRepository.findAll(
+      q,
+      page,
+      perPage,
+    );
+    return { partners: data, totalRecord: count };
   }
 
   async getPartnerById(id: string): Promise<PartnerSchema | null> {
@@ -55,6 +63,10 @@ export class PartnerService {
     partner: Partial<Omit<PartnerSchema, "id">>,
   ): Promise<PartnerSchema | null> {
     return this.partnerRepository.update(id, partner);
+  }
+
+  async deletePartner(id: string): Promise<boolean> {
+    return this.partnerRepository.delete(id);
   }
 
   async getCountries(): Promise<CountrySchema[]> {

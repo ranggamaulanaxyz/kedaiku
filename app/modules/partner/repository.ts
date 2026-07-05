@@ -11,16 +11,40 @@ export class PartnerRepository {
     this.supabase = this.context.get(supabaseClientContext);
   }
 
-  async findAll(): Promise<PartnerSchema[]> {
-    const { data, error } = await this.supabase
+  async findAll(
+    q?: string,
+    page?: number,
+    perPage?: number,
+  ): Promise<{ data: PartnerSchema[]; count: number }> {
+    let query = this.supabase
       .from("partners")
-      .select("*, country_state:country_states(*), country:countries(*)");
-    if (error) {
-      console.error(error);
-      return [];
+      .select("*, country_state:country_states(*), country:countries(*)", {
+        count: "exact",
+      });
+
+    if (q) {
+      query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
     }
 
-    return camelcaseKeys(data, { deep: true }) as PartnerSchema[];
+    if (page && perPage) {
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to);
+    }
+
+    // Order alphabetically by name
+    query = query.order("name", { ascending: true });
+
+    const { data, error, count } = await query;
+    if (error) {
+      console.error(error);
+      return { data: [], count: 0 };
+    }
+
+    return {
+      data: camelcaseKeys(data, { deep: true }) as PartnerSchema[],
+      count: count || 0,
+    };
   }
 
   async findById(id: string): Promise<PartnerSchema | null> {
@@ -72,5 +96,18 @@ export class PartnerRepository {
 
     return camelcaseKeys(data, { deep: true }) as PartnerSchema;
   }
-}
 
+  async delete(id: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("partners")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return false;
+    }
+
+    return true;
+  }
+}

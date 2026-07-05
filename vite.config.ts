@@ -94,8 +94,13 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        globDirectory: "build/client",
+        globPatterns: ["**/*.{js,css,html,png,svg,ico,wasm}"],
+      },
       devOptions: {
         enabled: true, // Mengaktifkan service worker saat local development (localhost)
+        suppressWarnings: true,
       },
     }),
   ],

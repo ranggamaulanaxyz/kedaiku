@@ -1,6 +1,15 @@
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, Outlet, useLocation, useNavigate, useBlocker, useNavigation } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Link,
+  Outlet,
+  useBeforeUnload,
+  useBlocker,
+  useNavigate,
+  useParams,
+  useSubmit,
+  type BlockerFunction,
+} from "react-router";
 import { Fragment } from "react/jsx-runtime";
 import { Button } from "~/components/ui/button";
 import {
@@ -12,125 +21,92 @@ import { Kbd } from "~/components/ui/kbd";
 import { LayoutHeader } from "~/modules/layout/components/header";
 import type { RouteHandle } from "~/modules/layout/types";
 import type { Route } from "./+types/partner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { BlockerAlert, ButtonWithAlert } from "../components/alert";
+import { DataSearch } from "../components/search";
 
 export const handle: RouteHandle = {
   breadcrumb: () => "Kontak",
 };
 
 export default function PartnerRoute({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate();
-  const [handleSave, setSaveHandler] = useState<() => void>(() => {});
-  const [customDiscard, setDiscardHandler] = useState<(() => void) | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const location = useLocation();
-  const navigation = useNavigation();
 
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const params = useParams();
+  const navigate = useNavigate();
+  const submit = useSubmit();
 
-  const isSubmitting = navigation.state === "submitting" || (navigation.state === "loading" && navigation.formMethod != null);
+  // Reset isDirty when params change
+  useEffect(() => {
+    setIsCreateMode(params.id === "new");
+    if (params.id === undefined) {
+      setIsDirty(false);
+    }
+  }, [params.id]);
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isEditMode && !isSubmitting && currentLocation.pathname !== nextLocation.pathname
+  // Using blocker to prevent navigation when form is dirty
+  const blockerCallback = useCallback<BlockerFunction>(
+    () => isDirty,
+    [isDirty],
+  );
+  const blocker = useBlocker(blockerCallback);
+
+  // Prevent page unload/reload when form is dirty
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (isDirty) {
+          event.preventDefault();
+        }
+      },
+      [isDirty],
+    ),
   );
 
+  // Show edit mode when form is dirty or in create mode
   useEffect(() => {
-    if (blocker.state === "blocked") {
-      setShowConfirmDialog(true);
-    }
-  }, [blocker.state]);
-
-  const handleConfirmDiscard = () => {
-    setIsEditMode(false);
-    setShowConfirmDialog(false);
-    if (blocker.state === "blocked") {
-      blocker.proceed();
-    } else if (pendingAction) {
-      pendingAction();
-      setPendingAction(null);
-    }
-  };
-
-  const handleCancelDiscard = () => {
-    setShowConfirmDialog(false);
-    if (blocker.state === "blocked") {
-      blocker.reset();
-    }
-    setPendingAction(null);
-  };
-
-  const handleDiscardClick = () => {
-    if (isEditMode) {
-      setPendingAction(() => () => {
-        if (customDiscard) {
-          customDiscard();
-        } else {
-          setIsEditMode(false);
-          if (location.pathname === "/app/partners/new") {
-            if (typeof window !== "undefined" && window.history.state && window.history.state.idx > 0) {
-              navigate(-1);
-            } else {
-              navigate("/app/partners");
-            }
-          }
-        }
-      });
-      setShowConfirmDialog(true);
+    if (formRef.current && (isDirty || isCreateMode)) {
+      setIsEditMode(true);
     } else {
-      if (customDiscard) {
-        customDiscard();
-      } else {
-        if (location.pathname === "/app/partners/new") {
-          if (typeof window !== "undefined" && window.history.state && window.history.state.idx > 0) {
-            navigate(-1);
-          } else {
-            navigate("/app/partners");
-          }
-        }
-      }
+      setIsEditMode(false);
     }
+  }, [formRef, isDirty, isCreateMode]);
+
+  // Save handler for submit data
+  const handleSave = () => {
+    submit(formRef.current);
   };
 
-  useEffect(() => {
-    setIsEditMode(false);
-  }, [location.pathname]);
-
-  const isNavigate = blocker.state === "blocked";
-  const dialogTitle = isNavigate ? "Tinggalkan Halaman?" : "Batalkan Perubahan?";
-  const dialogDescription = isNavigate
-    ? "Anda memiliki perubahan yang belum disimpan. Jika Anda meninggalkan halaman ini, perubahan Anda akan hilang."
-    : "Apakah Anda yakin ingin membatalkan perubahan ini? Semua perubahan yang belum disimpan akan dikembalikan.";
-  const confirmButtonText = isNavigate ? "Tinggalkan" : "Buang Perubahan";
-  const cancelButtonText = isNavigate ? "Tetap di Sini" : "Batal";
+  // Discard handler for cancel action
+  const handleDiscard = () => {
+    if (isCreateMode) {
+      navigate("/app/partners");
+    }
+  };
 
   return (
     <Fragment>
       <LayoutHeader>
-        <InputGroup>
-          <InputGroupInput placeholder="Ketik disini untuk mencari..." />
-          <InputGroupAddon>
-            <Search />
-          </InputGroupAddon>
-          <InputGroupAddon align="inline-end">
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </InputGroupAddon>
-        </InputGroup>
+        <DataSearch />
         {isEditMode ? (
           <Fragment>
             <Button onClick={handleSave}>Simpan</Button>
-            <Button variant="outline" onClick={handleDiscardClick}>
-              Batal
-            </Button>
+            {isDirty ? (
+              <ButtonWithAlert
+                title="Apa kamu yakin?"
+                description="Perubahan saat ini akan hilang jika kamu membatalkannya"
+                variant="outline"
+                onClick={handleDiscard}
+              >
+                Batalkan
+              </ButtonWithAlert>
+            ) : (
+              <Button variant="outline" onClick={handleDiscard}>
+                Batalkan
+              </Button>
+            )}
           </Fragment>
         ) : (
           <Button asChild>
@@ -138,31 +114,12 @@ export default function PartnerRoute({ loaderData }: Route.ComponentProps) {
           </Button>
         )}
       </LayoutHeader>
-      <Outlet context={{ setSaveHandler, setDiscardHandler, setIsEditMode }} />
-
-      <Dialog
-        open={showConfirmDialog}
-        onOpenChange={(open) => {
-          if (!open) handleCancelDiscard();
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{dialogTitle}</DialogTitle>
-            <DialogDescription>
-              {dialogDescription}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelDiscard}>
-              {cancelButtonText}
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmDiscard}>
-              {confirmButtonText}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Outlet context={{ formRef, isDirty, setIsDirty }} />
+      <BlockerAlert
+        title="Perubahan belum disimpan"
+        description="Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin meninggalkan halaman ini?"
+        blocker={blocker}
+      />
     </Fragment>
   );
 }

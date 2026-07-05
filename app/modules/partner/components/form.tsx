@@ -40,64 +40,16 @@ interface DataFromProps {
 }
 
 export default function DataForm({ state, data, error }: DataFromProps) {
-  const { setSaveHandler, setDiscardHandler, setIsEditMode } =
-    useOutletContext<{
-      setSaveHandler: (handler: () => void) => void;
-      setDiscardHandler: (
-        handler: ((handler: () => void) => void) | null,
-      ) => void;
-      setIsEditMode: (isEditMode: boolean) => void;
-    }>();
-  const submit = useSubmit();
-  const formRef = useRef<HTMLFormElement>(null);
-  const [formState, setFormState] = useState(state);
+  const { formRef, setIsDirty } = useOutletContext<{
+    formRef: React.RefObject<HTMLFormElement | null>;
+    setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
+  }>();
 
   const [partner, setPartner] = useState(data.partner);
   const [countryStates, setCountrySates] = useState(data.countryStates);
   const [countries, setCountries] = useState(data.countries);
 
   const [fieldErrors, setFieldError] = useState<PartnerValidationError>({});
-
-  useEffect(() => {
-    const handleSave = () => {
-      if (formRef.current) {
-        submit(formRef.current);
-      }
-    };
-    setSaveHandler(() => handleSave);
-  }, [setSaveHandler, submit]);
-
-  useEffect(() => {
-    if (state !== "create") {
-      const handleDiscard = () => {
-        setIsEditMode(false);
-        setFormState("idle");
-        setPartner(data.partner);
-        setFieldError({});
-        if (formRef.current) {
-          formRef.current.reset();
-        }
-      };
-      setDiscardHandler(() => handleDiscard);
-    }
-    return () => {
-      setDiscardHandler(null);
-    };
-  }, [state, setDiscardHandler, setIsEditMode, data.partner]);
-
-  useEffect(() => {
-    setFormState(state);
-  }, [state]);
-
-  useEffect(() => {
-    if (formState === "create") {
-      setIsEditMode(true);
-    } else if (formState === "saved") {
-      setIsEditMode(false);
-      setFormState("idle");
-      toast.success("Berhasil menyimpan data");
-    }
-  }, [setIsEditMode, formState]);
 
   useEffect(() => {
     setPartner(data.partner);
@@ -121,12 +73,11 @@ export default function DataForm({ state, data, error }: DataFromProps) {
   }, [error.formErrors]);
 
   const handleCountryChange = async (value: any) => {
-    setIsEditMode(true);
     const countryId = value;
     setPartner((prev) => {
-      if (!prev) return null;
+      const current = prev || ({} as PartnerSchema);
 
-      let countryStateId = prev.countryStateId;
+      let countryStateId = current.countryStateId;
       if (countryStateId) {
         const state = countryStates.find((s) => s.id === countryStateId);
         if (state && state.countryId !== countryId) {
@@ -135,20 +86,21 @@ export default function DataForm({ state, data, error }: DataFromProps) {
       }
 
       return {
-        ...prev,
+        ...current,
         countryId: countryId,
         countryStateId: countryStateId,
       };
     });
+
+    setIsDirty(true);
   };
 
   const handleCountryStateChange = async (value: any) => {
-    setIsEditMode(true);
     const countryStateId = value;
     setPartner((prev) => {
-      if (!prev) return null;
+      const current = prev || ({} as PartnerSchema);
       return {
-        ...prev,
+        ...current,
         countryStateId: countryStateId || undefined,
       };
     });
@@ -157,22 +109,28 @@ export default function DataForm({ state, data, error }: DataFromProps) {
       let state = countryStates.find((state) => state.id === countryStateId);
       if (state && state.countryId) {
         setPartner((prev) => {
-          if (!prev) return null;
+          const current = prev || ({} as PartnerSchema);
           return {
-            ...prev,
+            ...current,
             countryId: state.countryId,
           };
         });
       }
     }
+
+    setIsDirty(true);
+  };
+
+  const handleFormChange = () => {
+    setIsDirty(true);
   };
 
   return (
     <Form
+      ref={formRef}
       method="post"
       key={partner?.id}
-      ref={formRef}
-      onChange={() => setIsEditMode(true)}
+      onChange={handleFormChange}
     >
       <FieldGroup>
         <FieldSet>

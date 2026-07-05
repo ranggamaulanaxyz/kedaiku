@@ -272,23 +272,13 @@ function ReactDataTable<TData, TValue>({
               </TableRow>
             </ContextMenuTrigger>
             <ContextMenuContent>
-              <ContextMenuItem onSelect={() => openRows(row)}>
-                Open
-                {table.getSelectedRowModel().rows.length > 1
-                  ? ` (${table.getSelectedRowModel().rows.length} items)`
-                  : ""}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  alert(
-                    `Edit partner: ${(row.original as any).name || row.id}`,
-                  );
-                }}
-              >
-                Edit
-              </ContextMenuItem>
+              {table.getSelectedRowModel().rows.length <= 1 && (
+                <ContextMenuItem onSelect={() => openRows(row)}>
+                  Buka
+                </ContextMenuItem>
+              )}
               <ContextMenuItem onSelect={copySelectedRows}>
-                Copy
+                Salin
               </ContextMenuItem>
               <ContextMenuSeparator />
               <ContextMenuItem
@@ -299,7 +289,7 @@ function ReactDataTable<TData, TValue>({
                 }}
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive"
               >
-                Delete
+                Hapus
               </ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
@@ -381,7 +371,10 @@ export function DataTable<TData, TValue>({
   }, []);
 
   return (
-    <div ref={containerRef} className="max-w-full overflow-auto">
+    <div
+      ref={containerRef}
+      className="max-w-full overflow-auto rounded-xl border"
+    >
       {containerWidth > 0 ? (
         <ReactDataTable
           columns={columns}

@@ -37,6 +37,11 @@ export async function clientAction({
   context,
 }: Route.ClientActionArgs) {
   const partnerService = new PartnerService(context);
+
+  if (request.method === "DELETE") {
+    partnerService.deletePartner(params.id);
+  }
+
   const formData = await request.formData();
   const rawData = Object.fromEntries(formData);
   const data = camelcaseKeys(rawData, { deep: true });
