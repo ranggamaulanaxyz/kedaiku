@@ -34,8 +34,9 @@ export function Breadcrumbs() {
       to: match.pathname,
     }))
     .filter((crumb) => Boolean(crumb.label))
-    .filter((crumb, index, self) =>
-      self.findIndex((c) => c.to === crumb.to) === index,
+    .filter(
+      (crumb, index, self) =>
+        self.findIndex((c) => c.to === crumb.to) === index,
     );
 
   return (
@@ -62,4 +63,3 @@ export function Breadcrumbs() {
     </Breadcrumb>
   );
 }
-

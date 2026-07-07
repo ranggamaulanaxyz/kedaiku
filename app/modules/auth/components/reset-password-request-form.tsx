@@ -63,9 +63,8 @@ export default function ResetPasswordRequestForm({
     key: keyof ResetPasswordRequestSchema,
     value: string,
   ) => {
-    const result = await ResetPasswordRequestSchema.shape[key].safeParseAsync(
-      value,
-    );
+    const result =
+      await ResetPasswordRequestSchema.shape[key].safeParseAsync(value);
     if (result.success) {
       setFieldErrors((prev) => {
         const newErrors = { ...prev };
@@ -101,7 +100,9 @@ export default function ResetPasswordRequestForm({
     if (result.success) {
       submit(currentTarget);
     } else {
-      const errors = formatError<keyof ResetPasswordRequestSchema>(result.error);
+      const errors = formatError<keyof ResetPasswordRequestSchema>(
+        result.error,
+      );
       setFieldErrors(errors);
     }
   };
@@ -164,4 +165,3 @@ export default function ResetPasswordRequestForm({
     </div>
   );
 }
-

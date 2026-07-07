@@ -1,7 +1,7 @@
-import { Desk } from "~/modules/desk/components/desk";
 import { Outlet } from "react-router";
+import { Desk } from "../components/desk";
 
-export default function CountryRoute() {
+export default function DeskLayoutRoute() {
   return (
     <Desk>
       <Outlet />

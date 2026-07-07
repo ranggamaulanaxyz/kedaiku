@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { DeskContext } from "~/components/desk/desk";
+import { DeskContext } from "~/modules/desk/components/desk";
 
 export function useDesk() {
   const context = useContext(DeskContext);

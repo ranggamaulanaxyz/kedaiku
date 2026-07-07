@@ -71,6 +71,12 @@ const data: MenuItem[] = [
     icon: Contact,
     to: "/app/partners",
   },
+  {
+    type: "menu",
+    name: "Pengaturan",
+    icon: Cog,
+    children: [{ type: "menu", name: "Negara", to: "/app/countries" }],
+  },
 ];
 
 function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
@@ -93,8 +99,8 @@ function LayoutSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
             {item.children?.map((child) => {
               const isActive = child.to
                 ? location.pathname === child.to ||
-                (navigation.location &&
-                  navigation.location.pathname === child.to)
+                  (navigation.location &&
+                    navigation.location.pathname === child.to)
                 : false;
 
               return (
@@ -120,7 +126,7 @@ function LayoutSidebarMenuItem({ item }: { item: MenuItem }) {
   const navigation = useNavigation();
   const isActive = item.to
     ? location.pathname === item.to ||
-    (navigation.location && navigation.location.pathname === item.to)
+      (navigation.location && navigation.location.pathname === item.to)
     : false;
 
   return (
@@ -178,14 +184,6 @@ export default function LayoutSidebar({
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/app/settings">
-                    <Cog />
-                    <span>Pengaturan</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="#">
