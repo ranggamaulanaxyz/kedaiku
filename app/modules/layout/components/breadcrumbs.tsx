@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useMatches } from "react-router";
+import { Link, useMatches, useLocation } from "react-router";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -27,6 +27,13 @@ const getBreadcrumbLabel = (match: any): string => {
 
 export function Breadcrumbs() {
   const matches = useMatches();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`search:${location.pathname}`, location.search);
+    }
+  }, [location.pathname, location.search]);
 
   const breadcrumbs = matches
     .map((match) => ({
@@ -44,13 +51,14 @@ export function Breadcrumbs() {
       <BreadcrumbList>
         {breadcrumbs.map((crumb, index) => {
           const isLast = index === breadcrumbs.length - 1;
+          const savedSearch = typeof window !== "undefined" ? sessionStorage.getItem(`search:${crumb.to}`) || "" : "";
           return (
             <React.Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {crumb.to && !isLast ? (
                   <BreadcrumbLink asChild>
-                    <Link to={crumb.to}>{crumb.label}</Link>
+                    <Link to={`${crumb.to}${savedSearch}`}>{crumb.label}</Link>
                   </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
@@ -63,3 +71,4 @@ export function Breadcrumbs() {
     </Breadcrumb>
   );
 }
+

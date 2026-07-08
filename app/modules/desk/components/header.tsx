@@ -10,10 +10,7 @@ interface DeskHeaderProps {
 export function DeskHeader({ children }: DeskHeaderProps) {
   const matches = useMatches();
   const hasBreadcrumbs = matches.some(
-    (match) =>
-      match.handle &&
-      ((match.handle as any).breadcrumb ||
-        (match.handle as any).handleBreadcrumbs),
+    (match) => match.handle && (match.handle as any).breadcrumb,
   );
 
   return (

@@ -2,17 +2,10 @@ import { DeskList } from "~/modules/desk/components/list";
 import type { CountrySchema } from "../schemas";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Grid2X2 } from "lucide-react";
-import type { DeskHandle } from "~/modules/desk/types";
 import { Item } from "~/components/ui/item";
-import { useNavigate } from "react-router";
 import { cn } from "~/lib/utils";
 
-export const handle: DeskHandle = {
-  breadcrumb: "Negara",
-};
-
 export default function CountryList() {
-  const navigate = useNavigate();
   const fields: ColumnDef<CountrySchema>[] = [
     {
       accessorKey: "name",
@@ -34,7 +27,7 @@ export default function CountryList() {
         {
           key: "grid",
           Icon: Grid2X2,
-          View: (row, onRowClick) => (
+          View: (row, onRowClick, onRowDoubleClick) => (
             <Item
               variant="outline"
               data-state={row.getIsSelected() ? "selected" : undefined}
@@ -45,6 +38,7 @@ export default function CountryList() {
                   : "hover:bg-muted/50",
               )}
               onClick={(e) => onRowClick(e, row)}
+              onDoubleClick={() => onRowDoubleClick(row)}
             >
               {row.original.name}
             </Item>

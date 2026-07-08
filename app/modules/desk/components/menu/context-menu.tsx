@@ -21,6 +21,10 @@ function DeskContextMenu<TData>({
 }: DeskContextProps<TData>) {
   const { actions } = useDesk<TData>();
 
+  if (!actions) {
+    return children;
+  }
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -32,7 +36,7 @@ function DeskContextMenu<TData>({
               .map(([id, action]) => (
                 <ContextMenuItem
                   key={id}
-                  onClick={() => action.callback(row)}
+                  onClick={() => action.callback(row.original, row)}
                   variant={action.variant}
                 >
                   {action.name}

@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const CountrySchema = z.object({
-  id: z.uuid(),
+  id: z.uuid().readonly(),
   name: z.string(),
 });
 

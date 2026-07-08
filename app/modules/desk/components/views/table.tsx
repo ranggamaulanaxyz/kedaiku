@@ -42,11 +42,13 @@ function DeskTableHeader<TData>({ headerGroups }: DeskTableHeaderProps<TData>) {
 interface DeskTableBodyProps<TData> {
   rows: Row<TData>[];
   onRowClick: (e: React.MouseEvent, row: Row<TData>) => void;
+  onRowDoubleClick?: (row: Row<TData>) => void;
   isMultiSelected?: boolean;
 }
 function DeskTableBody<TData>({
   rows,
   onRowClick,
+  onRowDoubleClick,
   isMultiSelected,
 }: DeskTableBodyProps<TData>) {
   return (
@@ -60,6 +62,7 @@ function DeskTableBody<TData>({
           <TableRow
             data-state={row.getIsSelected() && "selected"}
             onClick={(e) => onRowClick(e, row)}
+            onDoubleClick={() => onRowDoubleClick?.(row)}
             className="cursor-pointer select-none"
           >
             {row.getVisibleCells().map((cell) => (
@@ -77,9 +80,14 @@ function DeskTableBody<TData>({
 interface DeskTableProps<TData> {
   table: ReactTable<TData>;
   onRowClick: (e: React.MouseEvent, row: Row<TData>) => void;
+  onRowDoubleClick?: (row: Row<TData>) => void;
 }
 
-function DeskTable<TData>({ table, onRowClick }: DeskTableProps<TData>) {
+function DeskTable<TData>({
+  table,
+  onRowClick,
+  onRowDoubleClick,
+}: DeskTableProps<TData>) {
   const isMultiSelected = table.getSelectedRowModel().rows.length > 1;
   return (
     <Table>
@@ -87,6 +95,7 @@ function DeskTable<TData>({ table, onRowClick }: DeskTableProps<TData>) {
       <DeskTableBody
         rows={table.getRowModel().rows}
         onRowClick={onRowClick}
+        onRowDoubleClick={onRowDoubleClick}
         isMultiSelected={isMultiSelected}
       />
     </Table>

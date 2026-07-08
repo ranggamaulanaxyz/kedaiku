@@ -16,6 +16,7 @@ export default [
 
     route("countries", "modules/country/routes/country.tsx", [
       index("modules/country/routes/list.tsx"),
+      route(":id", "modules/country/routes/form.tsx"),
     ]),
   ]),
 

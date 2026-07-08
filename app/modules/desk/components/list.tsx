@@ -1,10 +1,7 @@
 import {
-  flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
-  type HeaderGroup,
-  type Table as ReactTable,
   type Row,
 } from "@tanstack/react-table";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -15,25 +12,11 @@ import {
   TabsTrigger,
 } from "../../../components/ui/tabs";
 import { useIsMobile } from "~/hooks/use-mobile";
-import { Grid2X2, Table2, View } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui/table";
+import { Table2 } from "lucide-react";
+import { useSearchParams } from "react-router";
 import DeskPagination from "./pagination";
 import DeskGridView from "./views/grid";
 import { useDesk } from "~/hooks/use-desk";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuGroup,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "~/components/ui/context-menu";
 import { DeskTable } from "./views/table";
 import { DeskContextMenu } from "./menu/context-menu";
 
@@ -59,7 +42,7 @@ function ViewComponent({ mode, children }: ViewComponentProps) {
 
 interface DeskActionItem<TData> {
   name: string;
-  callback: (row: Row<TData>) => void;
+  callback: (data: TData, row?: Row<TData>) => void;
   isMulti?: boolean;
   variant?: "default" | "destructive";
 }
@@ -72,7 +55,6 @@ interface DeskListProps<TData, TValue> {
   fields: ColumnDef<TData, TValue>[];
   data: TData[];
   meta: {
-    actions?: DeskAction<TData>;
     totalRecords: number;
   };
   children?: {
@@ -81,6 +63,7 @@ interface DeskListProps<TData, TValue> {
     View: (
       row: Row<TData>,
       onRowClick: (e: React.MouseEvent, row: Row<TData>) => void,
+      onRowDoubleClick: (row: Row<TData>) => void,
     ) => React.ReactNode;
   }[];
 }
@@ -91,6 +74,7 @@ function DeskList<TData, TValue>({
   children,
   meta,
 }: DeskListProps<TData, TValue>) {
+  const { actions } = useDesk<TData>();
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -157,17 +141,47 @@ function DeskList<TData, TValue>({
     setLastSelectedIndex(currentIndex);
   };
 
+  const handleRowDoubleClick = (row: Row<TData>) => {
+    if (actions?.open) {
+      actions.open.callback(row.original, row);
+    }
+  };
+
   const views = useMemo(() => {
     return children ? children : [];
   }, [children, data]);
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<string>("table");
+
+  const defaultView = useMemo(() => {
+    const hasGrid = views.some((view) => view.key === "grid");
+    return isMobile && hasGrid ? "grid" : "table";
+  }, [isMobile, views]);
+
+  const viewMode = useMemo(() => {
+    const currentParam = searchParams.get("view");
+    const isValidView =
+      currentParam === "table" || views.some((v) => v.key === currentParam);
+    return isValidView ? currentParam! : defaultView;
+  }, [searchParams, views, defaultView]);
+
+  const setViewMode = (newVal: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("view", newVal);
+    setSearchParams(params, { replace: true });
+  };
 
   useEffect(() => {
-    const hasGrid = views.some((view) => view.key === "grid");
-    setViewMode(isMobile && hasGrid ? "grid" : "table");
-  }, [isMobile, views]);
+    const currentParam = searchParams.get("view");
+    const isValidView =
+      currentParam === "table" || views.some((v) => v.key === currentParam);
+    if (!isValidView) {
+      const params = new URLSearchParams(searchParams);
+      params.set("view", defaultView);
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, setSearchParams, defaultView, views]);
 
   return (
     <Tabs value={viewMode} onValueChange={setViewMode}>
@@ -196,7 +210,11 @@ function DeskList<TData, TValue>({
         value="table"
         className="overflow-auto rounded-xl border"
       >
-        <DeskTable table={table} onRowClick={handleRowClick} />
+        <DeskTable
+          table={table}
+          onRowClick={handleRowClick}
+          onRowDoubleClick={handleRowDoubleClick}
+        />
       </TabsContent>
       {views.map((view) => {
         const isMultiSelected = table.getSelectedRowModel().rows.length > 1;
@@ -209,7 +227,7 @@ function DeskList<TData, TValue>({
                   row={row}
                   isMultiSelected={isMultiSelected}
                 >
-                  {view.View(row, handleRowClick)}
+                  {view.View(row, handleRowClick, handleRowDoubleClick)}
                 </DeskContextMenu>
               ))}
             </ViewComponent>
