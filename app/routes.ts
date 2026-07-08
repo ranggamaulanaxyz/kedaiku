@@ -12,7 +12,11 @@ export default [
 
   route("/app", "modules/desk/routes/layout.tsx", [
     index("modules/desk/routes/desk.tsx"),
-    route("/app/dashboard", "modules/dashboard/routes/dashboard.tsx"),
+    route("dashboard", "modules/dashboard/routes/dashboard.tsx"),
+
+    route("countries", "modules/country/routes/country.tsx", [
+      index("modules/country/routes/list.tsx"),
+    ]),
   ]),
 
   // layout("modules/layout/routes/layout.tsx", [

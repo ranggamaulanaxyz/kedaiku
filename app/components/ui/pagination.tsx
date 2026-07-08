@@ -7,6 +7,7 @@ import {
   ChevronRightIcon,
   MoreHorizontalIcon,
 } from "lucide-react";
+import { Link } from "react-router";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -40,7 +41,7 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 type PaginationLinkProps = {
   isActive?: boolean;
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">;
+  React.ComponentProps<typeof Link>;
 
 function PaginationLink({
   className,
@@ -55,7 +56,7 @@ function PaginationLink({
       size={size}
       className={cn(className)}
     >
-      <a
+      <Link
         aria-current={isActive ? "page" : undefined}
         data-slot="pagination-link"
         data-active={isActive}

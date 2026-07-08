@@ -1,0 +1,204 @@
+import {
+  ChevronRight,
+  Cog,
+  Search,
+  ShoppingBag,
+  LayoutDashboard,
+  BadgeDollarSign,
+  Package,
+  Contact,
+} from "lucide-react";
+import { NavLink, useLocation, useNavigation } from "react-router";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "~/components/ui/sidebar";
+import { DeskUserMenu } from "./menu/user";
+
+interface MenuItem {
+  type: string;
+  name: string;
+  to?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  children?: {
+    type: string;
+    name: string;
+    to: string;
+  }[];
+}
+
+const data: MenuItem[] = [
+  {
+    type: "menu",
+    name: "Dasbor",
+    to: "/app/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    type: "menu",
+    name: "Penjualan",
+    to: "/app/sale",
+    icon: BadgeDollarSign,
+  },
+  {
+    type: "menu",
+    name: "Inventaris",
+    icon: Package,
+    children: [
+      { type: "menu", name: "Produk", to: "/app/products" },
+      { type: "menu", name: "Stok", to: "/app/stock" },
+    ],
+  },
+  {
+    type: "menu",
+    name: "Kontak",
+    icon: Contact,
+    to: "/app/partners",
+  },
+  {
+    type: "menu",
+    name: "Pengaturan",
+    icon: Cog,
+    children: [{ type: "menu", name: "Negara", to: "/app/countries" }],
+  },
+];
+
+function DeskSidebarMenuItemCollapsible({ item }: { item: MenuItem }) {
+  const Icon = item.icon;
+  const location = useLocation();
+  const navigation = useNavigation();
+
+  return (
+    <Collapsible asChild className="group/collapsible">
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton tooltip={item.name}>
+            {Icon && <Icon className="size-4" />}
+            <span>{item.name}</span>
+            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.children?.map((child) => {
+              const isActive = child.to
+                ? location.pathname === child.to ||
+                  (navigation.location &&
+                    navigation.location.pathname === child.to)
+                : false;
+
+              return (
+                <SidebarMenuSubItem key={child.name}>
+                  <SidebarMenuSubButton asChild isActive={isActive}>
+                    <NavLink to={child.to}>
+                      <span>{child.name}</span>
+                    </NavLink>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
+}
+
+function DeskSidebarMenuItem({ item }: { item: MenuItem }) {
+  const Icon = item.icon;
+  const location = useLocation();
+  const navigation = useNavigation();
+  const isActive = item.to
+    ? location.pathname === item.to ||
+      (navigation.location && navigation.location.pathname === item.to)
+    : false;
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton tooltip={item.name} asChild isActive={isActive}>
+        <NavLink to={item.to || "#"}>
+          {Icon && <Icon className="size-4" />}
+          <span>{item.name}</span>
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+function DeskSidebarMenu() {
+  return (
+    <>
+      {data.map((item) => {
+        if (item.children && item.children.length > 0) {
+          return <DeskSidebarMenuItemCollapsible key={item.name} item={item} />;
+        }
+        return <DeskSidebarMenuItem key={item.name} item={item} />;
+      })}
+    </>
+  );
+}
+
+export default function DeskSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <div className="flex gap-2">
+          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+            <ShoppingBag className="size-4" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">KEDAIKU</span>
+            <span className="truncate text-xs">V1.0.0</span>
+          </div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
+            <SidebarMenu>
+              <DeskSidebarMenu />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="#">
+                    <Search />
+                    <span>Pencarian</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <DeskUserMenu />
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}

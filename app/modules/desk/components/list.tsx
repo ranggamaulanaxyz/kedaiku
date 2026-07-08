@@ -15,7 +15,7 @@ import {
   TabsTrigger,
 } from "../../../components/ui/tabs";
 import { useIsMobile } from "~/hooks/use-mobile";
-import { Grid2X2, Table2 } from "lucide-react";
+import { Grid2X2, Table2, View } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,71 +24,64 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
+import DeskPagination from "./pagination";
+import DeskGridView from "./views/grid";
+import { useDesk } from "~/hooks/use-desk";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu";
+import { DeskTable } from "./views/table";
+import { DeskContextMenu } from "./menu/context-menu";
 
-interface DeskTableHeaderProps<TData> {
-  headerGroups: HeaderGroup<TData>[];
+const viewComponents: Record<
+  string,
+  React.ComponentType<{ children: React.ReactNode }>
+> = {
+  grid: DeskGridView,
+};
+
+interface ViewComponentProps {
+  mode: string;
+  children: React.ReactNode;
 }
 
-function DeskTableHeader<TData>({ headerGroups }: DeskTableHeaderProps<TData>) {
-  return (
-    <TableHeader>
-      {headerGroups.map((headerGroup) => (
-        <TableRow key={headerGroup.id}>
-          {headerGroup.headers.map((header) => (
-            <TableHead key={header.id}>
-              {header.isPlaceholder
-                ? null
-                : flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-            </TableHead>
-          ))}
-        </TableRow>
-      ))}
-    </TableHeader>
-  );
+function ViewComponent({ mode, children }: ViewComponentProps) {
+  if (viewComponents[mode]) {
+    const View = viewComponents[mode];
+    return <View>{children}</View>;
+  }
+  return children;
 }
 
-interface DeskTableBodyProps<TData> {
-  rows: Row<TData>[];
-}
-function DeskTableBody<TData>({ rows }: DeskTableBodyProps<TData>) {
-  return (
-    <TableBody>
-      {rows.map((row) => (
-        <TableRow key={row.id}>
-          {row.getVisibleCells().map((cell) => (
-            <TableCell key={cell.id}>
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </TableCell>
-          ))}
-        </TableRow>
-      ))}
-    </TableBody>
-  );
+interface DeskActionItem<TData> {
+  name: string;
+  callback: (row: Row<TData>) => void;
+  isMulti?: boolean;
+  variant?: "default" | "destructive";
 }
 
-interface DeskTableProps<TData> {
-  table: ReactTable<TData>;
-}
-
-function DeskTable<TData>({ table }: DeskTableProps<TData>) {
-  return (
-    <Table>
-      <DeskTableHeader headerGroups={table.getHeaderGroups()} />
-      <DeskTableBody rows={table.getRowModel().rows} />
-    </Table>
-  );
+interface DeskAction<TData> {
+  [key: string]: DeskActionItem<TData>;
 }
 
 interface DeskListProps<TData, TValue> {
   fields: ColumnDef<TData, TValue>[];
   data: TData[];
+  meta: {
+    actions?: DeskAction<TData>;
+    totalRecords: number;
+  };
   children?: {
     key: string;
     Icon: React.ComponentType<any>;
-    View: (data: TData) => React.ReactNode;
+    View: (
+      row: Row<TData>,
+      onRowClick: (e: React.MouseEvent, row: Row<TData>) => void,
+    ) => React.ReactNode;
   }[];
 }
 
@@ -96,23 +89,22 @@ function DeskList<TData, TValue>({
   fields,
   data,
   children,
+  meta,
 }: DeskListProps<TData, TValue>) {
-  const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<string>("table");
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!tableContainerRef.current) return;
 
     // Measure layout width synchronously on client mount
-    setContainerWidth(containerRef.current.getBoundingClientRect().width);
+    setContainerWidth(tableContainerRef.current.getBoundingClientRect().width);
 
     const observer = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
       setContainerWidth(entries[0].contentRect.width);
     });
-    observer.observe(containerRef.current);
+    observer.observe(tableContainerRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -120,15 +112,57 @@ function DeskList<TData, TValue>({
     return [...fields];
   }, []);
 
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+
   const table = useReactTable({
     columns: memoizedFields,
     data: data,
     getCoreRowModel: getCoreRowModel(),
+    state: {
+      rowSelection,
+    },
+    enableRowSelection: true,
+    enableMultiRowSelection: true,
+    onRowSelectionChange: setRowSelection,
   });
+
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
+    null,
+  );
+  const handleRowClick = (e: React.MouseEvent, row: Row<TData>) => {
+    const rows = table.getRowModel().rows;
+    const currentIndex = row.index;
+
+    if (e.shiftKey && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, currentIndex);
+      const end = Math.max(lastSelectedIndex, currentIndex);
+      const newSelection: Record<string, boolean> = {};
+
+      if (e.metaKey || e.ctrlKey) {
+        Object.assign(newSelection, rowSelection);
+      }
+
+      for (let i = start; i <= end; i++) {
+        newSelection[rows[i].id] = true;
+      }
+      setRowSelection(newSelection);
+    } else if (e.metaKey || e.ctrlKey) {
+      // Toggle selection
+      row.toggleSelected(!row.getIsSelected());
+    } else {
+      // Single selection
+      table.resetRowSelection();
+      row.toggleSelected(true);
+    }
+    setLastSelectedIndex(currentIndex);
+  };
 
   const views = useMemo(() => {
     return children ? children : [];
   }, [children, data]);
+
+  const isMobile = useIsMobile();
+  const [viewMode, setViewMode] = useState<string>("table");
 
   useEffect(() => {
     const hasGrid = views.some((view) => view.key === "grid");
@@ -153,19 +187,37 @@ function DeskList<TData, TValue>({
             })}
           </TabsList>
         </div>
+        <div>
+          <DeskPagination totalRecords={meta.totalRecords} />
+        </div>
       </div>
-      <div ref={containerRef} className="overflow-auto">
-        <TabsContent value="table">
-          <DeskTable table={table} />
-        </TabsContent>
-        {views.map((view) => (
+      <TabsContent
+        ref={tableContainerRef}
+        value="table"
+        className="overflow-auto rounded-xl border"
+      >
+        <DeskTable table={table} onRowClick={handleRowClick} />
+      </TabsContent>
+      {views.map((view) => {
+        const isMultiSelected = table.getSelectedRowModel().rows.length > 1;
+        return (
           <TabsContent key={view.key} value={view.key}>
-            {data.map((value) => view.View(value))}
+            <ViewComponent mode={view.key}>
+              {table.getRowModel().rows.map((row) => (
+                <DeskContextMenu
+                  key={row.id}
+                  row={row}
+                  isMultiSelected={isMultiSelected}
+                >
+                  {view.View(row, handleRowClick)}
+                </DeskContextMenu>
+              ))}
+            </ViewComponent>
           </TabsContent>
-        ))}
-      </div>
+        );
+      })}
     </Tabs>
   );
 }
 
-export { DeskList };
+export { type DeskAction, DeskList };

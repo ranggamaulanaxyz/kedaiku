@@ -1,24 +1,26 @@
 import React, { createContext } from "react";
+import type { DeskAction } from "./list";
 
-interface DeskContext {
+export interface DeskContext<TData> {
   name: string;
   saveHandler?: () => void;
+  actions?: DeskAction<TData>;
 }
 
-const DeskContext = createContext<DeskContext | null>(null);
+export const DeskContext = createContext<DeskContext<any> | null>(null);
 
-interface DeskProps {
+interface DeskProps<TData> {
   children: React.ReactNode;
+  actions?: DeskAction<TData>;
 }
 
-function Desk({ children }: DeskProps) {
-  const contextValue: DeskContext = {
+export function Desk<TData>({ children, actions }: DeskProps<TData>) {
+  const contextValue: DeskContext<TData> = {
     name: "Desk",
+    actions: actions,
   };
 
   return (
     <DeskContext.Provider value={contextValue}>{children}</DeskContext.Provider>
   );
 }
-
-export { Desk, DeskContext };
