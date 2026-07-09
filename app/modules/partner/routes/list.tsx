@@ -1,115 +1,103 @@
-import { useState, useEffect } from "react";
-import { DataTable } from "../components/table";
-import { DataGrid } from "../components/grid";
+import { useMemo } from "react";
+import { DeskList } from "~/modules/desk/components/list";
+import type { PartnerSchema } from "../schemas";
+import type { ColumnDef, Row } from "@tanstack/react-table";
+import { Grid2X2 } from "lucide-react";
+import { Item } from "~/components/ui/item";
+import { cn } from "~/lib/utils";
 import type { Route } from "./+types/list";
 import { PartnerService } from "../service";
-import type { ColumnDef } from "@tanstack/react-table";
-import type { PartnerSchema } from "../schemas";
-import { DataPagination } from "../components/pagination";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Grid2X2, Table2 } from "lucide-react";
-import { useSidebar } from "~/components/ui/sidebar";
-import { DataEmpty, DataNotFound } from "../components/empty";
-import { useSearchParams } from "react-router";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
+export async function clientLoader({ url, context }: Route.ClientLoaderArgs) {
   const q = url.searchParams.get("q") || undefined;
-  const page = Number(url.searchParams.get("page") || "1");
-  const perPage = Number(url.searchParams.get("perPage") || "25");
+  const offset = Number(url.searchParams.get("offset") || "1");
+  const limit = Number(url.searchParams.get("limit") || "10");
 
   const partnerService = new PartnerService(context);
   const { partners, totalRecord } = await partnerService.getPartners(
     q,
-    page,
-    perPage,
+    offset,
+    limit,
   );
 
-  return { partners, totalRecord, page, perPage };
+  return { partners, totalRecord };
 }
 
-export default function PartnerListRoute({ loaderData }: Route.ComponentProps) {
-  const { partners, totalRecord, page, perPage } = loaderData;
-  const { isMobile } = useSidebar();
-  const [tab, setTab] = useState<string>("table");
+const fields: ColumnDef<PartnerSchema>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama",
+    enableResizing: true,
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    enableResizing: true,
+  },
+  {
+    accessorKey: "address",
+    header: "Alamat",
+    enableResizing: true,
+  },
+  {
+    accessorKey: "city",
+    header: "Kota",
+    enableResizing: true,
+  },
+  {
+    id: "countryStateName",
+    accessorFn: (row) => row.countryState?.name,
+    header: "Provinsi",
+    enableResizing: true,
+  },
+  {
+    id: "countryName",
+    accessorFn: (row) => row.country?.name,
+    header: "Negara",
+    enableResizing: true,
+  },
+];
 
-  const [searchParams] = useSearchParams();
-  const query = searchParams.get("q");
+export default function PartnerList({ loaderData }: Route.ComponentProps) {
+  const { partners, totalRecord } = loaderData;
 
-  useEffect(() => {
-    setTab(isMobile ? "grid" : "table");
-  }, [isMobile]);
-
-  const columns: ColumnDef<PartnerSchema>[] = [
-    {
-      accessorKey: "name",
-      header: "Nama",
-      enableResizing: true,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      enableResizing: true,
-    },
-    {
-      accessorKey: "address",
-      header: "Alamat",
-      enableResizing: true,
-    },
-    {
-      accessorKey: "address2",
-      header: "Alamat 2",
-      enableResizing: true,
-    },
-    {
-      accessorKey: "city",
-      header: "Kota",
-      enableResizing: true,
-    },
-    {
-      id: "countryStateName",
-      accessorFn: (row) => row.country?.name,
-      header: "Provinsi",
-      enableResizing: true,
-    },
-    {
-      id: "countryName",
-      accessorFn: (row) => row.countryState?.name,
-      header: "Negara",
-      enableResizing: true,
-    },
-  ];
-
-  if (partners.length === 0) {
-    return query ? <DataNotFound /> : <DataEmpty />;
-  }
+  const views = useMemo(
+    () => [
+      {
+        key: "grid",
+        Icon: Grid2X2,
+        View: (
+          row: Row<PartnerSchema>,
+          onRowClick: any,
+          onRowDoubleClick: any,
+        ) => (
+          <Item
+            variant="outline"
+            data-state={row.getIsSelected() ? "selected" : undefined}
+            className={cn(
+              "cursor-pointer transition-all duration-200 select-none",
+              row.getIsSelected()
+                ? "bg-accent border-primary/40 ring-primary/20 shadow-sm ring-1"
+                : "hover:bg-muted/50",
+            )}
+            onClick={(e) => onRowClick(e, row)}
+            onDoubleClick={() => onRowDoubleClick(row)}
+          >
+            {row.original.name}
+          </Item>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
-    <Tabs value={tab} onValueChange={setTab} asChild>
-      <main className="px-4">
-        <div className="flex justify-between gap-4 p-2">
-          <div className="w-80">
-            <TabsList>
-              <TabsTrigger value="grid">
-                <Grid2X2 />
-              </TabsTrigger>
-              <TabsTrigger value="table">
-                <Table2 />
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <div></div>
-          <div className="flex items-center justify-between gap-1">
-            <DataPagination totalRecord={totalRecord} perPage={perPage} />
-          </div>
-        </div>
-        <TabsContent value="grid">
-          <DataGrid columns={columns} data={partners} />
-        </TabsContent>
-        <TabsContent value="table">
-          <DataTable columns={columns} data={partners} />
-        </TabsContent>
-      </main>
-    </Tabs>
+    <DeskList
+      fields={fields}
+      data={partners}
+      meta={{ totalRecords: totalRecord }}
+    >
+      {views}
+    </DeskList>
   );
 }

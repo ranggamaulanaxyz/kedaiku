@@ -29,7 +29,16 @@ export const PartnerSchema = z.object({
   ),
   country: CountrySchema.optional(),
   zip: z.string(),
+  createdAt: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().optional().nullable().readonly(),
+  ),
+  updatedAt: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().optional().nullable().readonly(),
+  ),
 });
 
 export type PartnerSchema = z.infer<typeof PartnerSchema>;
 export type PartnerValidationError = ValidationError<keyof PartnerSchema>;
+

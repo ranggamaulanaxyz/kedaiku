@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import camelcaseKeys from "camelcase-keys";
 import { toast } from "sonner";
 import { getFieldError } from "~/lib/utils";
-import Many2oneField from "~/modules/partner/components/fields/m2o";
+import { FieldMany2one } from "~/modules/desk/components/fields/many2one";
 
 export const handle: DeskHandle = {
   breadcrumb: (match) => {
@@ -198,25 +198,21 @@ export default function StateFormRoute({ loaderData }: Route.ComponentProps) {
                     )}
                   />
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="country_id">Negara</FieldLabel>
-                  <Many2oneField
+                <FieldMany2one
                     name="country_id"
+                    label="Negara"
                     placeholder="Pilih Negara"
                     items={countries}
                     value={countryId}
+                    errors={getFieldError<keyof CountryStateSchema>(
+                      "countryId",
+                      fieldErrors,
+                    )}
                     onValueChange={(val) => {
                       setCountryId(val as string | null);
                       setIsDirty(true);
                     }}
                   />
-                  <FieldError
-                    errors={getFieldError<keyof CountryStateSchema>(
-                      "countryId",
-                      fieldErrors,
-                    )}
-                  />
-                </Field>
               </FieldGroup>
             </div>
           </FieldSet>

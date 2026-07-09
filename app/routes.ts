@@ -23,5 +23,10 @@ export default [
       index("modules/country/routes/state_list.tsx"),
       route(":id", "modules/country/routes/state_form.tsx"),
     ]),
+
+    route("partners", "modules/partner/routes/partner.tsx", [
+      index("modules/partner/routes/list.tsx"),
+      route(":id", "modules/partner/routes/form.tsx"),
+    ]),
   ]),
 ] satisfies RouteConfig;

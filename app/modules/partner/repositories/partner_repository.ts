@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RouterContextProvider } from "react-router";
-import { supabaseClientContext } from "../supabase/context";
-import type { PartnerSchema } from "./schemas";
+import { supabaseClientContext } from "../../supabase/context";
+import type { PartnerSchema } from "../schemas";
 import camelcaseKeys from "camelcase-keys";
 import snakecaseKeys from "snakecase-keys";
 
@@ -13,8 +13,8 @@ export class PartnerRepository {
 
   async findAll(
     q?: string,
-    page?: number,
-    perPage?: number,
+    offset?: number,
+    limit?: number,
   ): Promise<{ data: PartnerSchema[]; count: number }> {
     let query = this.supabase
       .from("partners")
@@ -26,9 +26,9 @@ export class PartnerRepository {
       query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
     }
 
-    if (page && perPage) {
-      const from = (page - 1) * perPage;
-      const to = from + perPage - 1;
+    if (offset !== undefined && limit !== undefined) {
+      const from = (offset - 1) * limit;
+      const to = from + limit - 1;
       query = query.range(from, to);
     }
 
@@ -55,10 +55,11 @@ export class PartnerRepository {
       .single();
 
     if (error) {
+      console.error(error);
       return null;
     }
 
-    return camelcaseKeys(data) as PartnerSchema;
+    return camelcaseKeys(data, { deep: true }) as PartnerSchema;
   }
 
   async create(

@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router";
 import {
   BlockerAlert,
   ButtonWithAlert,
-} from "~/modules/partner/components/alert";
+} from "./alert";
 
 interface LayoutProps {
   children: React.ReactNode;

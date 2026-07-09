@@ -1,13 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabaseClientContext } from "../supabase/context";
 import type { RouterContextProvider } from "react-router";
-import { PartnerRepository } from "./repository";
+import { PartnerRepository } from "./repositories/partner_repository";
 import { PartnerSchema } from "./schemas";
 import { formatError } from "~/lib/utils";
 import { CountryRepository } from "../country/repositories/country_repository";
 import { StateCountryRepository } from "../country/repositories/state_country_repository";
 import type { CountrySchema, CountryStateSchema } from "../country/schemas";
-import snakecaseKeys from "snakecase-keys";
 
 export class PartnerService {
   partnerRepository: PartnerRepository;
@@ -22,13 +19,13 @@ export class PartnerService {
 
   async getPartners(
     q?: string,
-    page?: number,
-    perPage?: number,
+    offset?: number,
+    limit?: number,
   ): Promise<{ partners: PartnerSchema[]; totalRecord: number }> {
     const { data, count } = await this.partnerRepository.findAll(
       q,
-      page,
-      perPage,
+      offset,
+      limit,
     );
     return { partners: data, totalRecord: count };
   }
@@ -44,6 +41,10 @@ export class PartnerService {
       error,
     } = await PartnerSchema.omit({
       id: true,
+      createdAt: true,
+      updatedAt: true,
+      country: true,
+      countryState: true,
     }).safeParseAsync(data);
     if (success) {
       return { success, validatedData, error: null };
@@ -53,14 +54,14 @@ export class PartnerService {
   }
 
   async createPartner(
-    partner: Omit<PartnerSchema, "id">,
+    partner: Omit<PartnerSchema, "id" | "createdAt" | "updatedAt" | "country" | "countryState">,
   ): Promise<PartnerSchema | null> {
     return this.partnerRepository.create(partner);
   }
 
   async updatePartner(
     id: string,
-    partner: Partial<Omit<PartnerSchema, "id">>,
+    partner: Partial<Omit<PartnerSchema, "id" | "createdAt" | "updatedAt" | "country" | "countryState">>,
   ): Promise<PartnerSchema | null> {
     return this.partnerRepository.update(id, partner);
   }
