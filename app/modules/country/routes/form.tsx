@@ -39,8 +39,16 @@ export default function CountryForm() {
             </FieldDescription>
             <div className="grid grid-cols-1 md:grid-cols-2">
               <FieldGroup>
-                <FieldDate name="created_at" label="Tanggal Dibuat" />
-                <FieldDate name="updated_at" label="Tanggal Diubah" />
+                <FieldDate
+                  name="created_at"
+                  label="Tanggal Dibuat"
+                  readOnly={true}
+                />
+                <FieldDate
+                  name="updated_at"
+                  label="Tanggal Diubah"
+                  readOnly={true}
+                />
               </FieldGroup>
             </div>
           </FieldSet>

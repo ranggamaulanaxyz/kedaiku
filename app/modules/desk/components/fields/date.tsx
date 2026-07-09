@@ -41,11 +41,13 @@ export function FieldDate(props: FieldProps<Date>) {
   const [value, setValue] = React.useState(formatDate(date));
 
   return (
-    <FieldBase name={props.name} label={props.label}>
+    <FieldBase name={props.name} label={props.label} errors={props.errors}>
       <InputGroup>
         <InputGroupInput
           value={value}
+          readOnly={props.readOnly}
           onChange={(e) => {
+            if (props.readOnly) return;
             const date = new Date(e.target.value);
             setValue(e.target.value);
             if (isValidDate(date)) {
@@ -54,17 +56,22 @@ export function FieldDate(props: FieldProps<Date>) {
             }
           }}
           onFocus={(e) => {
+            if (props.readOnly) return;
             e.preventDefault();
             setOpen(true);
           }}
         />
         <InputGroupAddon align="inline-end">
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover
+            open={props.readOnly ? false : open}
+            onOpenChange={props.readOnly ? undefined : setOpen}
+          >
             <PopoverTrigger asChild>
               <InputGroupButton
                 variant="ghost"
                 size="icon-xs"
                 aria-label="Select date"
+                disabled={props.readOnly}
               >
                 <CalendarIcon />
                 <span className="sr-only">Pilih Tanggal</span>
