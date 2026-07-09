@@ -1,47 +1,51 @@
-import { useDeskForm } from "~/hooks/use-desk";
 import type { DeskHandle } from "~/modules/desk/types";
-import { CountrySchema } from "../schemas";
-import DeskForm from "~/modules/desk/components/form";
-import { FieldGroup } from "~/components/ui/field";
-import { FieldText, FieldNumber } from "~/modules/desk/components/fields/field";
+import { Form } from "react-router";
+import type { Route } from "./+types/form";
+import {
+  FieldDescription,
+  FieldGroup,
+  FieldLegend,
+  FieldSet,
+} from "~/components/ui/field";
+import { FieldText } from "~/modules/desk/components/fields/field";
+import { Card, CardContent } from "~/components/ui/card";
+import { FieldDate } from "~/modules/desk/components/fields/date";
 
 export const handle: DeskHandle = {
   breadcrumb: "Indonesia",
 };
 
+export async function clientLoader({ params }: Route.ClientActionArgs) {
+  const isCreate = params.id === "new";
+}
+
 export default function CountryForm() {
-  const fields = [
-    {
-      field: FieldText,
-      accessorKey: "id",
-      label: "ID",
-      xxx: "a",
-    },
-    {
-      field: FieldText,
-      accessorKey: "name",
-      label: "Nama",
-    },
-  ];
-
-  const defaultValues: CountrySchema = {
-    id: "sd",
-    name: "sdf",
-  };
-
-  const form = useDeskForm<CountrySchema>({
-    defaultValues,
-    fields,
-  });
-
   return (
-    <DeskForm form={form}>
-      {(Field) => (
-        <FieldGroup>
-          <Field name="id" />
-          <Field name="name" />
-        </FieldGroup>
-      )}
-    </DeskForm>
+    <Card>
+      <CardContent>
+        <Form className="grid grid-cols-1 gap-12">
+          <FieldSet>
+            <FieldLegend>Informasi Umum</FieldLegend>
+            <FieldDescription>Nama dan kode unik negara</FieldDescription>
+            <FieldGroup className="grid grid-cols-1 md:grid-cols-2">
+              <FieldText name="name" label="Nama" />
+              <FieldText name="code" label="Kode" />
+            </FieldGroup>
+          </FieldSet>
+          <FieldSet>
+            <FieldLegend>Informasi Teknik</FieldLegend>
+            <FieldDescription>
+              Informasi waktu pembuatan dan pembaruan data
+            </FieldDescription>
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <FieldGroup>
+                <FieldDate name="created_at" label="Tanggal Dibuat" />
+                <FieldDate name="updated_at" label="Tanggal Diubah" />
+              </FieldGroup>
+            </div>
+          </FieldSet>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
