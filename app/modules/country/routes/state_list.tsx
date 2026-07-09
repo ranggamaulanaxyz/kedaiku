@@ -1,43 +1,36 @@
 import { useMemo } from "react";
 import { DeskList } from "~/modules/desk/components/list";
-import type { CountrySchema } from "../schemas";
+import type { CountryStateSchema } from "../schemas";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { Grid2X2 } from "lucide-react";
 import { Item } from "~/components/ui/item";
 import { cn } from "~/lib/utils";
-import type { Route } from "./+types/list";
-import { CountryService } from "../service";
+import type { Route } from "./+types/state_list";
+import { StateCountryService } from "../service";
 
 export async function clientLoader({ url, context }: Route.ClientLoaderArgs) {
   const q = url.searchParams.get("q") || undefined;
-  const offset = Number(url.searchParams.get("offset") || "1");
-  const limit = Number(url.searchParams.get("limit") || "10");
+  const stateCountryService = new StateCountryService(context);
+  const states = await stateCountryService.getStates(undefined, q);
 
-  const countryService = new CountryService(context);
-  const { countries, totalRecord } = await countryService.getCountries(
-    q,
-    offset,
-    limit,
-  );
-
-  return { countries, totalRecord };
+  return { states };
 }
 
-const fields: ColumnDef<CountrySchema>[] = [
+const fields: ColumnDef<CountryStateSchema>[] = [
   {
-    accessorKey: "code",
-    header: "Kode",
+    accessorKey: "name",
+    header: "Nama Provinsi",
     enableResizing: true,
   },
   {
-    accessorKey: "name",
-    header: "Nama",
+    accessorKey: "country.name",
+    header: "Negara",
     enableResizing: true,
   },
 ];
 
-export default function CountryList({ loaderData }: Route.ComponentProps) {
-  const { countries, totalRecord } = loaderData;
+export default function StateList({ loaderData }: Route.ComponentProps) {
+  const { states } = loaderData;
 
   const views = useMemo(
     () => [
@@ -45,7 +38,7 @@ export default function CountryList({ loaderData }: Route.ComponentProps) {
         key: "grid",
         Icon: Grid2X2,
         View: (
-          row: Row<CountrySchema>,
+          row: Row<CountryStateSchema>,
           onRowClick: any,
           onRowDoubleClick: any,
         ) => (
@@ -61,7 +54,12 @@ export default function CountryList({ loaderData }: Route.ComponentProps) {
             onClick={(e) => onRowClick(e, row)}
             onDoubleClick={() => onRowDoubleClick(row)}
           >
-            {row.original.name}
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">{row.original.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {row.original.country?.name}
+              </span>
+            </div>
           </Item>
         ),
       },
@@ -72,8 +70,8 @@ export default function CountryList({ loaderData }: Route.ComponentProps) {
   return (
     <DeskList
       fields={fields}
-      data={countries}
-      meta={{ totalRecords: totalRecord }}
+      data={states}
+      meta={{ totalRecords: states.length }}
     >
       {views}
     </DeskList>

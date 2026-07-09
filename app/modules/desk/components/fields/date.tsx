@@ -34,11 +34,26 @@ function isValidDate(date: Date | undefined) {
   return !isNaN(date.getTime());
 }
 
-export function FieldDate(props: FieldProps<Date>) {
+export function FieldDate(props: FieldProps<Date | string | null>) {
   const [open, setOpen] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
-  const [month, setMonth] = React.useState<Date | undefined>(date);
-  const [value, setValue] = React.useState(formatDate(date));
+
+  const initialDate = React.useMemo(() => {
+    if (!props.value) return undefined;
+    const d = new Date(props.value);
+    return isValidDate(d) ? d : undefined;
+  }, [props.value]);
+
+  const [date, setDate] = React.useState<Date | undefined>(initialDate);
+  const [month, setMonth] = React.useState<Date | undefined>(initialDate);
+  const [value, setValue] = React.useState(formatDate(initialDate));
+
+  React.useEffect(() => {
+    const d = props.value ? new Date(props.value) : undefined;
+    const validD = isValidDate(d) ? d : undefined;
+    setDate(validD);
+    setMonth(validD);
+    setValue(formatDate(validD));
+  }, [props.value]);
 
   return (
     <FieldBase name={props.name} label={props.label} errors={props.errors}>
@@ -48,11 +63,11 @@ export function FieldDate(props: FieldProps<Date>) {
           readOnly={props.readOnly}
           onChange={(e) => {
             if (props.readOnly) return;
-            const date = new Date(e.target.value);
+            const targetDate = new Date(e.target.value);
             setValue(e.target.value);
-            if (isValidDate(date)) {
-              setDate(date);
-              setMonth(date);
+            if (isValidDate(targetDate)) {
+              setDate(targetDate);
+              setMonth(targetDate);
             }
           }}
           onFocus={(e) => {

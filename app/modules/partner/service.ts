@@ -70,7 +70,8 @@ export class PartnerService {
   }
 
   async getCountries(): Promise<CountrySchema[]> {
-    return this.countryRepository.findAll();
+    const { data } = await this.countryRepository.findAll();
+    return data;
   }
 
   async getCountryStates(countryId?: string): Promise<CountryStateSchema[]> {

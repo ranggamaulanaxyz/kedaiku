@@ -3,6 +3,7 @@ import type { RouterContextProvider } from "react-router";
 import { supabaseClientContext } from "../../supabase/context";
 import type { CountryStateSchema } from "../schemas";
 import camelcaseKeys from "camelcase-keys";
+import snakecaseKeys from "snakecase-keys";
 
 export class StateCountryRepository {
   private supabase: SupabaseClient;
@@ -10,7 +11,7 @@ export class StateCountryRepository {
     this.supabase = this.context.get(supabaseClientContext);
   }
 
-  async findAll(countryId?: string): Promise<CountryStateSchema[]> {
+  async findAll(countryId?: string, q?: string): Promise<CountryStateSchema[]> {
     let query = this.supabase
       .from("country_states")
       .select("*, country:countries(*)");
@@ -18,6 +19,13 @@ export class StateCountryRepository {
     if (countryId) {
       query = query.eq("country_id", countryId);
     }
+
+    if (q) {
+      query = query.ilike("name", `%${q}%`);
+    }
+
+    // Order alphabetically by name
+    query = query.order("name", { ascending: true });
 
     const { data, error } = await query;
     if (error) {
@@ -48,7 +56,7 @@ export class StateCountryRepository {
   ): Promise<CountryStateSchema | null> {
     const { data, error } = await this.supabase
       .from("country_states")
-      .insert(state)
+      .insert(snakecaseKeys(state))
       .select()
       .single();
 
@@ -66,7 +74,7 @@ export class StateCountryRepository {
   ): Promise<CountryStateSchema | null> {
     const { data, error } = await this.supabase
       .from("country_states")
-      .update(state)
+      .update(snakecaseKeys(state))
       .eq("id", id)
       .select()
       .single();
@@ -77,5 +85,19 @@ export class StateCountryRepository {
     }
 
     return camelcaseKeys(data, { deep: true }) as CountryStateSchema;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from("country_states")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return false;
+    }
+
+    return true;
   }
 }

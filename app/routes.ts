@@ -18,20 +18,10 @@ export default [
       index("modules/country/routes/list.tsx"),
       route(":id", "modules/country/routes/form.tsx"),
     ]),
+
+    route("country/states", "modules/country/routes/state.tsx", [
+      index("modules/country/routes/state_list.tsx"),
+      route(":id", "modules/country/routes/state_form.tsx"),
+    ]),
   ]),
-
-  // layout("modules/layout/routes/layout.tsx", [
-  //   route("/app/dashboard", "modules/dashboard/routes/dashboard.tsx"),
-
-  //   // Country
-  //   route("/app/countries", "modules/country/routes/country.tsx", [
-  //     index("modules/country/routes/list.tsx"),
-  //   ]),
-
-  //   // Contact
-  //   route("/app/partners", "modules/partner/routes/partner.tsx", [
-  //     index("modules/partner/routes/list.tsx"),
-  //     route("/app/partners/:id", "modules/partner/routes/form.tsx"),
-  //   ]),
-  // ]),
 ] satisfies RouteConfig;

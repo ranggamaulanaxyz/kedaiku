@@ -75,7 +75,10 @@ const data: MenuItem[] = [
     type: "menu",
     name: "Pengaturan",
     icon: Cog,
-    children: [{ type: "menu", name: "Negara", to: "/app/countries" }],
+    children: [
+      { type: "menu", name: "Negara", to: "/app/countries" },
+      { type: "menu", name: "Provinsi", to: "/app/states" },
+    ],
   },
 ];
 

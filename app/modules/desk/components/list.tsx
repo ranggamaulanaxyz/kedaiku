@@ -40,14 +40,14 @@ function ViewComponent({ mode, children }: ViewComponentProps) {
   return children;
 }
 
-interface DeskActionItem<TData> {
+export interface DeskActionItem<TData> {
   name: string;
   callback: (data: TData, row?: Row<TData>) => void;
   isMulti?: boolean;
   variant?: "default" | "destructive";
 }
 
-interface DeskAction<TData> {
+export interface DeskAction<TData> {
   [key: string]: DeskActionItem<TData>;
 }
 
@@ -74,7 +74,7 @@ function DeskList<TData, TValue>({
   children,
   meta,
 }: DeskListProps<TData, TValue>) {
-  const { actions } = useDesk<TData>();
+  const { baseUrl, actions } = useDesk<TData>();
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -92,9 +92,46 @@ function DeskList<TData, TValue>({
     return () => observer.disconnect();
   }, []);
 
+  const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
+  const colCount = fields.length;
+  const calculatedDefaultSize =
+    colCount > 0 && containerWidth > 0
+      ? Math.floor(containerWidth / colCount)
+      : 150;
+
+  const columnIds = fields
+    .map((c: any) => c.id || c.accessorKey || "")
+    .join(",");
+
+  const storageKey = `desk-col-sizing:${baseUrl}`;
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        setColumnSizing(JSON.parse(stored));
+      } else {
+        setColumnSizing({});
+      }
+    } catch (e) {
+      console.error(e);
+      setColumnSizing({});
+    }
+  }, [columnIds, storageKey]);
+
+  useEffect(() => {
+    if (Object.keys(columnSizing).length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(columnSizing));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [columnSizing, storageKey]);
+
   const memoizedFields = useMemo(() => {
     return [...fields];
-  }, []);
+  }, [fields, calculatedDefaultSize]);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 
@@ -104,10 +141,17 @@ function DeskList<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     state: {
       rowSelection,
+      columnSizing,
     },
     enableRowSelection: true,
     enableMultiRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    defaultColumn: {
+      size: calculatedDefaultSize,
+      minSize: 40,
+    },
+    columnResizeMode: "onChange",
+    onColumnSizingChange: setColumnSizing,
   });
 
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
@@ -214,6 +258,7 @@ function DeskList<TData, TValue>({
           table={table}
           onRowClick={handleRowClick}
           onRowDoubleClick={handleRowDoubleClick}
+          containerWidth={containerWidth}
         />
       </TabsContent>
       {views.map((view) => {
@@ -238,4 +283,4 @@ function DeskList<TData, TValue>({
   );
 }
 
-export { type DeskAction, DeskList };
+export { DeskList };

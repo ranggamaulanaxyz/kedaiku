@@ -8,3 +8,7 @@ export interface DeskFormField<TData> {
   label?: string,
   Component?: React.ComponentType<{ value: string, name: string; }>
 }
+
+export interface DeskLoaderData<TData> {
+  record: TData | null;
+}
