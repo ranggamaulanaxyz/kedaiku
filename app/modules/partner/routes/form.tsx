@@ -226,7 +226,7 @@ export default function PartnerFormRoute({ loaderData }: Route.ComponentProps) {
             <FieldSet>
               <FieldLegend>Informasi Umum</FieldLegend>
               <FieldDescription>Nama dan informasi kontak</FieldDescription>
-              <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4">
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="name">Nama</FieldLabel>
